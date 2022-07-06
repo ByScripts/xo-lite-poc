@@ -1,5 +1,5 @@
 <template>
-    <div class="form-container">
+    <div class="app-login form-container">
         <form @submit.prevent="handleSubmit">
             <img alt="XO Lite" src="../assets/logo.png" />
             <h1>Xen Orchestra Lite</h1>

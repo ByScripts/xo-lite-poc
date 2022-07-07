@@ -12,9 +12,9 @@
 </template>
 
 <script lang="ts" setup>
-import { useXenApiStore } from "@/stores/xen-api.store";
 import { nextTick } from "vue";
 import { useRouter } from "vue-router";
+import { useXenApiStore } from "@/stores/xen-api.store";
 
 const router = useRouter();
 

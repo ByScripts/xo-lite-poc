@@ -16,8 +16,8 @@
 </template>
 
 <script lang="ts" setup>
-import { useXenApiStore } from "@/stores/xen-api.store";
 import { ref } from "vue";
+import { useXenApiStore } from "@/stores/xen-api.store";
 
 const xenApiStore = useXenApiStore();
 const login = ref("root");

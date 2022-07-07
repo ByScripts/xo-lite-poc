@@ -19,18 +19,18 @@
 </template>
 
 <script lang="ts" setup>
-import InfraAction from "@/components/infra/InfraAction.vue";
-import InfraItemLabel from "@/components/infra/InfraItemLabel.vue";
-import InfraVmList from "@/components/infra/InfraVmList.vue";
-import useToggle from "@/composables/useToggle";
-import { useHostStore } from "@/stores/host.store";
-import { useUiStore } from "@/stores/ui.store";
+import { computed } from "vue";
 import {
   faAngleDown,
   faAngleUp,
   faServer,
 } from "@fortawesome/free-solid-svg-icons";
-import { computed } from "vue";
+import InfraAction from "@/components/infra/InfraAction.vue";
+import InfraItemLabel from "@/components/infra/InfraItemLabel.vue";
+import InfraVmList from "@/components/infra/InfraVmList.vue";
+import useToggle from "@/composables/toggle.composable";
+import { useHostStore } from "@/stores/host.store";
+import { useUiStore } from "@/stores/ui.store";
 
 const props = defineProps<{
   hostOpaqueRef: string;

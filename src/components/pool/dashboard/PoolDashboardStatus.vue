@@ -18,13 +18,13 @@
 </template>
 
 <script lang="ts" setup>
+import { computed } from "vue";
 import AppCard from "@/components/AppCard.vue";
 import AppSeparator from "@/components/AppSeparator.vue";
 import AppTitle from "@/components/AppTitle.vue";
 import PoolDashboardStatusItem from "@/components/pool/dashboard/PoolDashboardStatusItem.vue";
 import { useHostMetricsStore } from "@/stores/host-metrics.store";
 import { useVmStore } from "@/stores/vm.store";
-import { computed } from "vue";
 
 const vmStore = useVmStore();
 const hostMetricsStore = useHostMetricsStore();
@@ -41,7 +41,7 @@ const activeHostsCount = computed(() => {
 const totalVmsCount = computed(() => vmStore.opaqueRefs.length);
 const activeVmsCount = computed(() => {
   return vmStore.opaqueRefs.filter(
-    (opaqueRef) => vmStore.getRecord(opaqueRef)!.power_state === "Running"
+    (opaqueRef) => vmStore.getRecord(opaqueRef)?.power_state === "Running"
   ).length;
 });
 </script>

@@ -49,11 +49,11 @@
 </template>
 
 <script lang="ts" setup>
+import { storeToRefs } from "pinia";
+import { computed } from "vue";
 import TabBar from "@/components/TabBar.vue";
 import TabBarItem from "@/components/TabBarItem.vue";
 import { usePoolStore } from "@/stores/pool.store";
-import { storeToRefs } from "pinia";
-import { computed } from "vue";
 
 const poolStore = usePoolStore();
 const { pool, isReady } = storeToRefs(poolStore);

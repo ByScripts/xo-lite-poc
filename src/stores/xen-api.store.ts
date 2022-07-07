@@ -1,16 +1,16 @@
+import { defineStore } from "pinia";
+import { computed, ref, watchEffect } from "vue";
+import { useLocalStorage } from "@vueuse/core";
 import type { XenApiRecord } from "@/libs/xen-api";
 import XenApi from "@/libs/xen-api";
 import { useConsoleStore } from "@/stores/console.store";
 import { useHostMetricsStore } from "@/stores/host-metrics.store";
 import { useHostStore } from "@/stores/host.store";
 import { usePoolStore } from "@/stores/pool.store";
+import { useRecordsStore } from "@/stores/records.store";
 import { useVmGuestMetricsStore } from "@/stores/vm-guest-metrics.store";
 import { useVmMetricsStore } from "@/stores/vm-metrics.store";
 import { useVmStore } from "@/stores/vm.store";
-import { useRecordsStore } from "@/stores/records.store";
-import { useLocalStorage } from "@vueuse/core";
-import { defineStore } from "pinia";
-import { computed, ref, watch, watchEffect } from "vue";
 
 export const useXenApiStore = defineStore("xen-api", () => {
   const xenApi = new XenApi(import.meta.env.VITE_XO_HOST);

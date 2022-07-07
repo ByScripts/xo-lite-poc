@@ -1,7 +1,7 @@
-import type { ObjectType, XenApiRecord } from "@/libs/xen-api";
-import { useXenApiStore } from "@/stores/xen-api.store";
 import { defineStore } from "pinia";
 import { reactive, shallowReactive } from "vue";
+import type { ObjectType, XenApiRecord } from "@/libs/xen-api";
+import { useXenApiStore } from "@/stores/xen-api.store";
 
 export const useRecordsStore = defineStore("records", () => {
   const recordsByOpaqueRef = shallowReactive<Map<string, XenApiRecord>>(
@@ -14,9 +14,7 @@ export const useRecordsStore = defineStore("records", () => {
 
   async function loadRecords<T extends XenApiRecord>(objectType: ObjectType) {
     const xenApiStore = useXenApiStore();
-
     const xapi = await xenApiStore.getXapi();
-
     const loadedRecords = await xapi.loadRecords<T>(objectType);
 
     const lowercaseObjectType =
@@ -26,11 +24,10 @@ export const useRecordsStore = defineStore("records", () => {
       opaqueRefsByObjectType.set(lowercaseObjectType, new Set());
     }
 
-    const opaqueRefs = opaqueRefsByObjectType.get(lowercaseObjectType)!;
-
+    const opaqueRefs = opaqueRefsByObjectType.get(lowercaseObjectType);
     for (const [opaqueRef, record] of loadedRecords) {
       recordsByOpaqueRef.set(opaqueRef, record);
-      opaqueRefs.add(opaqueRef);
+      opaqueRefs?.add(opaqueRef);
       uuidToOpaqueRefMapping.set(record.uuid, opaqueRef);
     }
   }
@@ -57,7 +54,10 @@ export const useRecordsStore = defineStore("records", () => {
     }
   }
 
-  function getRecord<T extends XenApiRecord>(opaqueRef: string): T | undefined {
+  function getRecord<T extends XenApiRecord>(opaqueRef: string): T {
+    if (!recordsByOpaqueRef.has(opaqueRef)) {
+      throw new Error(`No record with ref ${opaqueRef}`);
+    }
     return recordsByOpaqueRef.get(opaqueRef) as T;
   }
 

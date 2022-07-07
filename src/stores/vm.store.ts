@@ -1,17 +1,15 @@
-import { sortRecordsByNameLabel } from '@/libs/utils';
-import type { XenApiVm } from '@/libs/xen-api';
-import { createRecordContext } from '@/stores/index';
-import { defineStore } from 'pinia';
-import { computed } from 'vue';
+import { sortRecordsByNameLabel } from "@/libs/utils";
+import type { XenApiVm } from "@/libs/xen-api";
+import { createRecordContext } from "@/stores/index";
+import { defineStore } from "pinia";
+import { computed } from "vue";
 
-export const useVmStore = defineStore('vm', () => {
-  const baseVmContext = createRecordContext<XenApiVm>(
-    'VM',
-    {
-      filter: (vm) => !vm.is_a_snapshot && !vm.is_a_template && !vm.is_control_domain,
-      sort: sortRecordsByNameLabel,
-    },
-  );
+export const useVmStore = defineStore("vm", () => {
+  const baseVmContext = createRecordContext<XenApiVm>("VM", {
+    filter: (vm) =>
+      !vm.is_a_snapshot && !vm.is_a_template && !vm.is_control_domain,
+    sort: sortRecordsByNameLabel,
+  });
 
   const opaqueRefsByHostRef = computed(() => {
     const vmsOpaqueRefsByHostOpaqueRef = new Map<string, string[]>();

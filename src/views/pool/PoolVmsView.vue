@@ -1,3 +1,1 @@
-<template>
-  VMs
-</template>
+<template>VMs</template>

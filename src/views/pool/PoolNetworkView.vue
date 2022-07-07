@@ -1,3 +1,1 @@
-<template>
-  Network
-</template>
+<template>Network</template>

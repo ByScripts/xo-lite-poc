@@ -12,10 +12,10 @@
 </template>
 
 <script lang="ts" setup>
-  import InfraHostItem from '@/components/infra/InfraHostItem.vue';
-  import { useHostStore } from '@/stores/host.store';
-  import { storeToRefs } from 'pinia';
+import InfraHostItem from "@/components/infra/InfraHostItem.vue";
+import { useHostStore } from "@/stores/host.store";
+import { storeToRefs } from "pinia";
 
-  const hostStore = useHostStore();
-  const { opaqueRefs, isReady } = storeToRefs(hostStore);
+const hostStore = useHostStore();
+const { opaqueRefs, isReady } = storeToRefs(hostStore);
 </script>

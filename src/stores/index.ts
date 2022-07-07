@@ -1,13 +1,16 @@
-import type { ObjectType, XenApiRecord } from '@/libs/xen-api';
-import { useRecordsStore } from '@/stores/records.store';
-import { computed, ref } from 'vue';
+import { computed, ref } from "vue";
+import type { ObjectType, RawObjectType, XenApiRecord } from "@/libs/xen-api";
+import { useRecordsStore } from "@/stores/records.store";
 
 type Options<T extends XenApiRecord> = {
-  filter?: (record: T) => boolean
-  sort?: (record1: T, record2: T) => 1 | 0 | -1
-}
+  filter?: (record: T) => boolean;
+  sort?: (record1: T, record2: T) => 1 | 0 | -1;
+};
 
-export function createRecordContext<T extends XenApiRecord>(objectType: ObjectType, options: Options<T> = {}) {
+export function createRecordContext<T extends XenApiRecord>(
+  objectType: RawObjectType,
+  options: Options<T> = {}
+) {
   let isInitialized = false;
   const isReady = ref(false);
 
@@ -20,36 +23,44 @@ export function createRecordContext<T extends XenApiRecord>(objectType: ObjectTy
 
     const xapiRecordsStore = useRecordsStore();
     await xapiRecordsStore.loadRecords(objectType);
-
     isReady.value = true;
   }
 
   const opaqueRefs = computed<string[]>(() => {
     const xapiRecordsStore = useRecordsStore();
-    let opaqueRefs: string[] = Array.from(xapiRecordsStore.getRecordsOpaqueRefs(objectType.toLocaleLowerCase() as Lowercase<ObjectType>));
+    let opaqueRefs: string[] = Array.from(
+      xapiRecordsStore.getRecordsOpaqueRefs(
+        objectType.toLocaleLowerCase() as ObjectType
+      )
+    );
 
     if (options.filter) {
-      opaqueRefs = opaqueRefs.filter((opaqueRef) => options.filter!(xapiRecordsStore.getRecord(opaqueRef)!));
+      opaqueRefs = opaqueRefs.filter((opaqueRef) =>
+        options.filter!(xapiRecordsStore.getRecord(opaqueRef))
+      );
     }
 
     if (options.sort) {
       opaqueRefs = opaqueRefs.sort((opaqueRef1, opaqueRef2) => {
-        return options.sort!(xapiRecordsStore.getRecord(opaqueRef1)!, xapiRecordsStore.getRecord(opaqueRef2)!);
+        return options.sort!(
+          xapiRecordsStore.getRecord(opaqueRef1),
+          xapiRecordsStore.getRecord(opaqueRef2)
+        );
       });
     }
 
     return opaqueRefs;
   });
 
-  function getRecord(opaqueRef: string) {
-    const xapiRecordsStore = useRecordsStore();
-    return xapiRecordsStore.getRecord<T>(opaqueRef);
-  }
+  const allRecords = computed(() =>
+    opaqueRefs.value.map((opaqueRef) => getRecord(opaqueRef))
+  );
 
-  function getRecordByUuid(uuid: string) {
-    const xapiRecordsStore = useRecordsStore();
-    return xapiRecordsStore.getRecordByUuid<T>(uuid);
-  }
+  const getRecord = (opaqueRef: string) =>
+    useRecordsStore().getRecord<T>(opaqueRef);
+
+  const getRecordByUuid = (uuid: string) =>
+    useRecordsStore().getRecordByUuid<T>(uuid);
 
   return {
     init,
@@ -57,5 +68,6 @@ export function createRecordContext<T extends XenApiRecord>(objectType: ObjectTy
     getRecord,
     getRecordByUuid,
     isReady,
+    allRecords,
   };
 }

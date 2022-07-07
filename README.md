@@ -91,6 +91,8 @@ Vue variables can be interpolated with `v-bind`.
 
 ### Icons
 
+This project is using Font Awesome Pro 6.
+
 Here is how to use an icon in your template.
 
 Note: `FontAwesomeIcon` is a global component that does not need to be imported.
@@ -106,6 +108,17 @@ Note: `FontAwesomeIcon` is a global component that does not need to be imported.
   import { faDisplay } from '@fortawesome/free-solid-svg-icons';
 </script>
 ```
+
+#### Font weight <=> Style name
+
+Here is the equivalent between font weight and style name.
+
+| Style name | Font weight |
+|------------|-------------|
+| Solid      | 900         |
+| Regular    | 400         |
+| Light      | 300         |
+| Thin       | 100         |
 
 ### CSS
 

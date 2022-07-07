@@ -1,3 +1,1 @@
-<template>
-  Tasks
-</template>
+<template>Tasks</template>

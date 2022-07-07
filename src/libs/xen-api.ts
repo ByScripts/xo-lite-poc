@@ -1,64 +1,71 @@
-import { JSONRPCClient } from 'json-rpc-2.0';
+import { JSONRPCClient } from "json-rpc-2.0";
 
-export type ObjectType =
-  'Bond'
-  | 'Certificate'
-  | 'Cluster'
-  | 'Cluster_host'
-  | 'DR_task'
-  | 'Feature'
-  | 'GPU_group'
-  | 'PBD'
-  | 'PCI'
-  | 'PGPU'
-  | 'PIF'
-  | 'PIF_metrics'
-  | 'PUSB'
-  | 'PVS_cache_storage'
-  | 'PVS_proxy'
-  | 'PVS_server'
-  | 'PVS_site'
-  | 'SDN_controller'
-  | 'SM'
-  | 'SR'
-  | 'USB_group'
-  | 'VBD'
-  | 'VBD_metrics'
-  | 'VDI'
-  | 'VGPU'
-  | 'VGPU_type'
-  | 'VIF'
-  | 'VIF_metrics'
-  | 'VLAN'
-  | 'VM'
-  | 'VMPP'
-  | 'VMSS'
-  | 'VM_appliance'
-  | 'VM_guest_metrics'
-  | 'VM_metrics'
-  | 'VUSB'
-  | 'blob'
-  | 'console'
-  | 'crashdump'
-  | 'host'
-  | 'host_cpu'
-  | 'host_crashdump'
-  | 'host_metrics'
-  | 'host_patch'
-  | 'network'
-  | 'network_sriov'
-  | 'pool'
-  | 'pool_patch'
-  | 'pool_update'
-  | 'role'
-  | 'secret'
-  | 'subject'
-  | 'task'
-  | 'tunnel'
+export type RawObjectType =
+  | "Bond"
+  | "Certificate"
+  | "Cluster"
+  | "Cluster_host"
+  | "DR_task"
+  | "Feature"
+  | "GPU_group"
+  | "PBD"
+  | "PCI"
+  | "PGPU"
+  | "PIF"
+  | "PIF_metrics"
+  | "PUSB"
+  | "PVS_cache_storage"
+  | "PVS_proxy"
+  | "PVS_server"
+  | "PVS_site"
+  | "SDN_controller"
+  | "SM"
+  | "SR"
+  | "USB_group"
+  | "VBD"
+  | "VBD_metrics"
+  | "VDI"
+  | "VGPU"
+  | "VGPU_type"
+  | "VIF"
+  | "VIF_metrics"
+  | "VLAN"
+  | "VM"
+  | "VMPP"
+  | "VMSS"
+  | "VM_appliance"
+  | "VM_guest_metrics"
+  | "VM_metrics"
+  | "VUSB"
+  | "blob"
+  | "console"
+  | "crashdump"
+  | "host"
+  | "host_cpu"
+  | "host_crashdump"
+  | "host_metrics"
+  | "host_patch"
+  | "network"
+  | "network_sriov"
+  | "pool"
+  | "pool_patch"
+  | "pool_update"
+  | "role"
+  | "secret"
+  | "subject"
+  | "task"
+  | "tunnel";
 
-export type XenApiRecord = {
-  uuid: string
+export type PowerState = "Running" | "Paused" | "Halted" | "Suspended";
+
+export type ObjectType = Lowercase<RawObjectType>;
+
+export interface XenApiRecord {
+  $ref: string;
+  uuid: string;
 }
+
+type RawXenApiRecord<T extends XenApiRecord> = Omit<T, "$ref">;
 
 export interface XenApiPool extends XenApiRecord {
   name_label: string;
@@ -72,7 +79,8 @@ export interface XenApiHost extends XenApiRecord {
 
 export interface XenApiVm extends XenApiRecord {
   name_label: string;
-  power_state: 'Running' | 'Paused' | 'Halted' | 'Suspended';
+  name_description: string;
+  power_state: PowerState;
   resident_on: string;
   consoles: string[];
   is_control_domain: boolean;
@@ -91,25 +99,19 @@ export interface XenApiHostMetrics extends XenApiRecord {
   memory_total: number;
 }
 
-export interface XenApiVmMetrics extends XenApiRecord {
+export type XenApiVmMetrics = XenApiRecord;
 
-}
-
-export interface XenApiVmGuestMetrics extends XenApiRecord {
-
-}
+export type XenApiVmGuestMetrics = XenApiRecord;
 
 type WatchCallbackResult = {
-  id: string
-  class: Lowercase<ObjectType>
-  operation: 'add' | 'mod' | 'del'
-  ref: string
-  snapshot: object
-}
+  id: string;
+  class: ObjectType;
+  operation: "add" | "mod" | "del";
+  ref: string;
+  snapshot: object;
+};
 
-type WatchCallbackResults = WatchCallbackResult[]
-
-type WatchCallback = (results: WatchCallbackResults) => void
+type WatchCallback = (results: WatchCallbackResult[]) => void;
 
 export default class XenApi {
   #client: JSONRPCClient;
@@ -122,10 +124,10 @@ export default class XenApi {
   #fromToken: string | undefined;
 
   constructor(hostUrl: string) {
-    this.#client = new JSONRPCClient((request: any) => {
+    this.#client = new JSONRPCClient((request) => {
       return fetch(`${hostUrl}/jsonrpc`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        method: "POST",
+        headers: { "content-type": "application/json" },
         body: JSON.stringify(request),
       }).then((response) => {
         if (response.status === 200) {
@@ -137,14 +139,47 @@ export default class XenApi {
     });
   }
 
-  async connect(login: string, password: string) {
-    this.#sessionId = await this.#call('session.login_with_password', [login, password]);
-    this.#types = (await this.#call<string[]>('system.listMethods'))
-      .filter((method: string) => method.endsWith('.get_all_records'))
-      .map((method: string) => method.slice(0, method.indexOf('.')))
-      .filter((type: string) => type !== 'message');
+  async connectWithPassword(username: string, password: string) {
+    this.#sessionId = await this.#call("session.login_with_password", [
+      username,
+      password,
+    ]);
+
+    await this.loadTypes();
 
     return this.#sessionId;
+  }
+
+  async connectWithSessionId(sessionId: string) {
+    this.#sessionId = sessionId;
+
+    try {
+      await this.#call("session.get_all_subject_identifiers", [
+        this.#sessionId,
+      ]);
+
+      await this.loadTypes();
+
+      return true;
+    } catch (error: any) {
+      if (error?.message === "SESSION_INVALID") {
+        return false;
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  disconnect() {
+    this.stopWatch();
+    this.#sessionId = undefined;
+  }
+
+  async loadTypes() {
+    this.#types = (await this.#call<string[]>("system.listMethods"))
+      .filter((method: string) => method.endsWith(".get_all_records"))
+      .map((method: string) => method.slice(0, method.indexOf(".")))
+      .filter((type: string) => type !== "message");
   }
 
   get sessionId() {
@@ -155,34 +190,40 @@ export default class XenApi {
     return this.#client.request(method, args);
   }
 
-  async loadRecords<T extends XenApiRecord>(type: ObjectType): Promise<Map<string, T>> {
-    const result = await this.#call(`${type}.get_all_records`, [this.sessionId]);
-    return new Map(Object.entries<T>(result));
+  async loadRecords<T extends XenApiRecord>(
+    type: RawObjectType
+  ): Promise<Map<string, T>> {
+    const result = await this.#call<{ [key: string]: RawXenApiRecord<T> }>(
+      `${type}.get_all_records`,
+      [this.sessionId]
+    );
+
+    const entries = Object.entries(result).map<[string, T]>(([key, entry]) => [
+      key,
+      { $ref: key, ...entry } as T,
+    ]);
+
+    return new Map(entries);
   }
 
   async #watch() {
     if (!this.#fromToken) {
-      throw new Error('call `injectWatchEvent` before startWatch');
+      throw new Error("call `injectWatchEvent` before startWatch");
     }
     // load pools
     while (this.#watching) {
       if (!this.#watchCallBack) {
         // no callback , skip this call
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
-      const result: { token: string, events: any } = await this.#call(
-        'event.from',
-        [
-          this.sessionId,
-          this.#types,
-          this.#fromToken,
-          5.001,
-        ],
+      const result: { token: string; events: any } = await this.#call(
+        "event.from",
+        [this.sessionId, this.#types, this.#fromToken, 5.001]
       );
       this.#fromToken = result.token;
       this.#watchCallBack?.(result.events);
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
 
@@ -201,6 +242,10 @@ export default class XenApi {
   }
 
   async injectWatchEvent(poolRef: string) {
-    this.#fromToken = await this.#call('event.inject', [this.sessionId, 'pool', poolRef]);
+    this.#fromToken = await this.#call("event.inject", [
+      this.sessionId,
+      "pool",
+      poolRef,
+    ]);
   }
 }

@@ -7,6 +7,6 @@
 </template>
 
 <script lang="ts" setup>
-  import PoolHeader from '@/components/pool/PoolHeader.vue';
-  import PoolTabBar from '@/components/pool/PoolTabBar.vue';
+import PoolHeader from "@/components/pool/PoolHeader.vue";
+import PoolTabBar from "@/components/pool/PoolTabBar.vue";
 </script>

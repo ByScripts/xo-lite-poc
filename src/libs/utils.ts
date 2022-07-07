@@ -1,4 +1,7 @@
-export function sortRecordsByNameLabel(record1: { name_label: string }, record2: { name_label: string }) {
+export function sortRecordsByNameLabel(
+  record1: { name_label: string },
+  record2: { name_label: string }
+) {
   const label1 = record1.name_label.toLocaleLowerCase();
   const label2 = record2.name_label.toLocaleLowerCase();
 

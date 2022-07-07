@@ -1,3 +1,1 @@
-<template>
-  System
-</template>
+<template>System</template>

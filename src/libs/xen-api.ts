@@ -91,9 +91,9 @@ export interface XenApiHostMetrics extends XenApiRecord {
   memory_total: number;
 }
 
-export interface XenApiVmMetrics extends XenApiRecord {}
+export type XenApiVmMetrics = XenApiRecord;
 
-export interface XenApiVmGuestMetrics extends XenApiRecord {}
+export type XenApiVmGuestMetrics = XenApiRecord;
 
 type WatchCallbackResult = {
   id: string;

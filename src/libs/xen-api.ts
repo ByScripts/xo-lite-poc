@@ -118,7 +118,7 @@ export default class XenApi {
   #fromToken: string | undefined;
 
   constructor(hostUrl: string) {
-    this.#client = new JSONRPCClient((request: any) => {
+    this.#client = new JSONRPCClient((request) => {
       return fetch(`${hostUrl}/jsonrpc`, {
         method: "POST",
         headers: { "content-type": "application/json" },

@@ -3,9 +3,9 @@
 </template>
 
 <script lang="ts" setup>
-import { useXenApiStore } from "@/stores/xen-api.store";
-import VncClient from "@novnc/novnc/core/rfb";
 import { onBeforeUnmount, ref, watchEffect } from "vue";
+import VncClient from "@novnc/novnc/core/rfb";
+import { useXenApiStore } from "@/stores/xen-api.store";
 
 const props = defineProps<{
   location: string;

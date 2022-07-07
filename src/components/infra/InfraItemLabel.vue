@@ -19,8 +19,8 @@
 </template>
 
 <script lang="ts" setup>
-import type { IconDefinition } from "@fortawesome/fontawesome-common-types";
 import type { RouteLocationRaw } from "vue-router";
+import type { IconDefinition } from "@fortawesome/fontawesome-common-types";
 
 defineProps<{
   icon: IconDefinition;

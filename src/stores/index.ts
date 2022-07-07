@@ -1,6 +1,6 @@
+import { computed, ref } from "vue";
 import type { ObjectType, XenApiRecord } from "@/libs/xen-api";
 import { useRecordsStore } from "@/stores/records.store";
-import { computed, ref } from "vue";
 
 type Options<T extends XenApiRecord> = {
   filter?: (record: T) => boolean;
@@ -23,7 +23,6 @@ export function createRecordContext<T extends XenApiRecord>(
 
     const xapiRecordsStore = useRecordsStore();
     await xapiRecordsStore.loadRecords(objectType);
-
     isReady.value = true;
   }
 
@@ -37,15 +36,15 @@ export function createRecordContext<T extends XenApiRecord>(
 
     if (options.filter) {
       opaqueRefs = opaqueRefs.filter((opaqueRef) =>
-        options.filter!(xapiRecordsStore.getRecord(opaqueRef)!)
+        options.filter!(xapiRecordsStore.getRecord(opaqueRef))
       );
     }
 
     if (options.sort) {
       opaqueRefs = opaqueRefs.sort((opaqueRef1, opaqueRef2) => {
         return options.sort!(
-          xapiRecordsStore.getRecord(opaqueRef1)!,
-          xapiRecordsStore.getRecord(opaqueRef2)!
+          xapiRecordsStore.getRecord(opaqueRef1),
+          xapiRecordsStore.getRecord(opaqueRef2)
         );
       });
     }
@@ -54,8 +53,7 @@ export function createRecordContext<T extends XenApiRecord>(
   });
 
   function getRecord(opaqueRef: string) {
-    const xapiRecordsStore = useRecordsStore();
-    return xapiRecordsStore.getRecord<T>(opaqueRef);
+    return useRecordsStore().getRecord<T>(opaqueRef);
   }
 
   function getRecordByUuid(uuid: string) {

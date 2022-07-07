@@ -1,9 +1,9 @@
 <template>Chargement en cours...</template>
 
 <script lang="ts" setup>
-import { usePoolStore } from "@/stores/pool.store";
 import { watchEffect } from "vue";
 import { useRouter } from "vue-router";
+import { usePoolStore } from "@/stores/pool.store";
 
 const router = useRouter();
 const poolStore = usePoolStore();

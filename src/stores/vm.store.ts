@@ -1,8 +1,8 @@
+import { defineStore } from "pinia";
+import { computed } from "vue";
 import { sortRecordsByNameLabel } from "@/libs/utils";
 import type { XenApiVm } from "@/libs/xen-api";
 import { createRecordContext } from "@/stores/index";
-import { defineStore } from "pinia";
-import { computed } from "vue";
 
 export const useVmStore = defineStore("vm", () => {
   const baseVmContext = createRecordContext<XenApiVm>("VM", {
@@ -15,13 +15,13 @@ export const useVmStore = defineStore("vm", () => {
     const vmsOpaqueRefsByHostOpaqueRef = new Map<string, string[]>();
 
     baseVmContext.opaqueRefs.value.forEach((opaqueRef) => {
-      const vm = baseVmContext.getRecord(opaqueRef)!;
+      const vm = baseVmContext.getRecord(opaqueRef);
 
       if (!vmsOpaqueRefsByHostOpaqueRef.has(vm.resident_on)) {
         vmsOpaqueRefsByHostOpaqueRef.set(vm.resident_on, []);
       }
 
-      vmsOpaqueRefsByHostOpaqueRef.get(vm.resident_on)!.push(opaqueRef);
+      vmsOpaqueRefsByHostOpaqueRef.get(vm.resident_on)?.push(opaqueRef);
     });
 
     return vmsOpaqueRefsByHostOpaqueRef;

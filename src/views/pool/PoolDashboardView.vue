@@ -20,8 +20,8 @@
 import AppBadge from "@/components/AppBadge.vue";
 import AppCard from "@/components/AppCard.vue";
 import AppTitle from "@/components/AppTitle.vue";
-import PoolDashboardStatus from "@/components/pool/dashboard/PoolDashboardStatus.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
+import PoolDashboardStatus from "@/components/pool/dashboard/PoolDashboardStatus.vue";
 </script>
 
 <style lang="postcss" scoped>

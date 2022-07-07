@@ -14,9 +14,7 @@
 </template>
 
 <script lang="ts" setup>
-import InfraAction from "@/components/infra/InfraAction.vue";
-import InfraItemLabel from "@/components/infra/InfraItemLabel.vue";
-import { useVmStore } from "@/stores/vm.store";
+import { computed, ref } from "vue";
 import {
   faDisplay,
   faMoon,
@@ -25,7 +23,9 @@ import {
   faStop,
 } from "@fortawesome/free-solid-svg-icons";
 import { useIntersectionObserver } from "@vueuse/core";
-import { computed, ref } from "vue";
+import InfraAction from "@/components/infra/InfraAction.vue";
+import InfraItemLabel from "@/components/infra/InfraItemLabel.vue";
+import { useVmStore } from "@/stores/vm.store";
 
 const props = defineProps<{
   vmOpaqueRef: string;

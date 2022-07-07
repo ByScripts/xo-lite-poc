@@ -1,0 +1,156 @@
+form.form {
+  display: flex;
+  flex-direction: column;
+  --form-control-disabled: var(--color-blue-scale-200);
+  --form-background: var(--color-blue-scale-500);
+  --form-control-color: var(--color-blue-scale-100);
+
+  .form-control {
+    line-height: 1.1;
+    display: flex;
+    flex-direction: column;
+
+
+    /* add margin between form element*/
+    & + .form-control {
+      margin-top: 1.5rem;
+    }
+    &.inline {
+      flex-direction: row;
+      align-items: center;
+      span {
+        flex: 1;
+      }
+      input,
+      select {
+        flex: 2;
+        margin-left: 0.5rem;
+      }
+
+      .append,
+      .prepend {
+        top: 1rem;
+      }
+
+      span + input, 
+                        input[type=checkbox] + span, /*the only control that can have the label after*/
+                        span + select, 
+                        span + textarea {
+        margin-left: 0.5rem;
+      }
+    }
+
+    input,
+    select,
+    textarea {
+      padding: 1rem 1.5rem;
+      border: 1px solid var(--color-blue-scale-400);
+      background-color: var(--form-background);
+      border-radius: 0.8rem;
+      margin: 0.5rem 0 0 0;
+      box-shadow: 0px 1px 1px rgba(20, 20, 30, 0.06);
+      flex: 1;
+
+      &:focus {
+        outline: max(1px, 0.1rem) solid currentColor;
+      }
+    }
+
+
+    .prepend {
+      position: absolute;
+      top: 2.3rem;
+      left: 0.5rem;
+      z-index: 2;
+      height: 3rem;
+      width: 3rem;
+    }
+    .prepend + input {
+      padding-left: 4.5rem;
+    }
+
+    .append {
+      position: absolute;
+      top: 2.3rem;
+      right: 0.5rem;
+      z-index: 2;
+      height: 3rem;
+      width: 3rem;
+    }
+
+    /* from https://moderncss.dev/pure-css-custom-checkbox-style/ */
+    input[type="checkbox"] {
+      flex: 1.5rem 0 0;
+      appearance: none;
+      /* For iOS < 15 */
+      background-color: var(--form-background);
+      /* Not removed via appearance */
+      margin: 0;
+      font: inherit;
+      color: currentColor;
+      width: 1.15em;
+      height: 1.15em;
+      border: 0.15em solid currentColor;
+      border-radius: 0.15em;
+      transform: translateY(-0.075em);
+      display: grid;
+      place-content: center;
+      padding: 0;
+
+      &::before {
+        content: "";
+        width: 0.65em;
+        height: 0.65em;
+        -webkit-clip-path: polygon(
+          14% 44%,
+          0 65%,
+          50% 100%,
+          100% 16%,
+          80% 0%,
+          43% 62%
+        );
+        clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        transform: scale(0);
+        transform-origin: bottom left;
+        transition: 120ms transform ease-in-out;
+        box-shadow: inset 1em 1em var(--form-control-color);
+        /* Windows High Contrast Mode */
+        background-color: CanvasText;
+      }
+
+      &:checked::before {
+        transform: scale(1);
+      }
+
+      &:disabled {
+        --form-control-color: var(--form-control-disabled);
+        color: var(--form-control-disabled);
+        cursor: not-allowed;
+      }
+    }
+  }
+
+
+  .form-control--disabled {
+    color: var(--form-control-disabled);
+    cursor: not-allowed;
+  }
+
+  input.form-control[type="submit"],
+  input.form-control[type="button"],
+  button.form-control {
+    background-color: var(--color-extra-blue-base);
+    color: var(--color-blue-scale-500);
+    border: none;
+    cursor: pointer;
+    padding: 1rem 1.5rem;
+    box-shadow: 0px 1px 1px rgba(20, 20, 30, 0.06);
+    border-radius: 8px;
+
+    &.inverse{
+      color: var(--color-extra-blue-base);
+      background-color: var(--color-blue-scale-500);
+
+    }
+  }
+}

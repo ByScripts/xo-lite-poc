@@ -14,65 +14,73 @@
 </template>
 
 <script lang="ts" setup>
-  import InfraAction from '@/components/infra/InfraAction.vue';
-  import InfraItemLabel from '@/components/infra/InfraItemLabel.vue';
-  import { useVmStore } from '@/stores/vm.store';
-  import { faDisplay, faMoon, faPause, faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
-  import { useIntersectionObserver } from '@vueuse/core';
-  import { computed, ref } from 'vue';
+import { computed, ref } from "vue";
+import {
+  faDisplay,
+  faMoon,
+  faPause,
+  faPlay,
+  faStop,
+} from "@fortawesome/free-solid-svg-icons";
+import { useIntersectionObserver } from "@vueuse/core";
+import InfraAction from "@/components/infra/InfraAction.vue";
+import InfraItemLabel from "@/components/infra/InfraItemLabel.vue";
+import { useVmStore } from "@/stores/vm.store";
 
-  const props = defineProps<{
-    vmOpaqueRef: string
-  }>();
+const props = defineProps<{
+  vmOpaqueRef: string;
+}>();
 
-  const rootElement = ref();
-  const isVisible = ref(false);
+const rootElement = ref();
+const isVisible = ref(false);
 
-  const { stop } = useIntersectionObserver(rootElement, ([entry]) => {
-    if (entry.isIntersecting) {
-      isVisible.value = true;
-      stop();
-    }
-  });
+const { stop } = useIntersectionObserver(rootElement, ([entry]) => {
+  if (entry.isIntersecting) {
+    isVisible.value = true;
+    stop();
+  }
+});
 
-  const vmStore = useVmStore();
+const vmStore = useVmStore();
 
-  const vm = computed(() => vmStore.getRecord(props.vmOpaqueRef));
+const vm = computed(() => vmStore.getRecord(props.vmOpaqueRef));
 
-  const powerStateIcon = computed(() => {
-    switch (vm.value?.power_state) {
-      case 'Running':
-        return faPlay;
-      case 'Paused':
-        return faPause;
-      case 'Suspended':
-        return faMoon;
-      default:
-        return faStop;
-    }
-  });
+const powerStateIcon = computed(() => {
+  switch (vm.value?.power_state) {
+    case "Running":
+      return faPlay;
+    case "Paused":
+      return faPause;
+    case "Suspended":
+      return faMoon;
+    default:
+      return faStop;
+  }
+});
 
-  const powerStateClass = computed(() => vm.value?.power_state.toLocaleLowerCase());
+const powerStateClass = computed(() =>
+  vm.value?.power_state.toLocaleLowerCase()
+);
 </script>
 
 <style lang="postcss" scoped>
-  .infra-vm-item {
-    height: 6rem;
+.infra-vm-item {
+  height: 6rem;
+}
+
+.infra-action {
+  color: var(--color-extra-blue-d60);
+
+  &.running {
+    color: var(--color-green-infra-base);
   }
 
-  .infra-action {
-    color: var(--color-extra-blue-d60);
-
-    &.running {
-      color: var(--color-green-infra-base);
-    }
-
-    &.paused {
-      color: var(--color-blue-scale-300);
-    }
-
-    &.suspended {
-      color: var(--color-extra-blue-d20);
-    }
+  &.paused {
+    color: var(--color-blue-scale-300);
   }
+
+  &.suspended {
+    color: var(--color-extra-blue-d20);
+  }
+}
 </style>

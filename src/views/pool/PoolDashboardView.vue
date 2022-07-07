@@ -17,21 +17,21 @@
 </template>
 
 <script lang="ts" setup>
-  import AppBadge from '@/components/AppBadge.vue';
-  import AppCard from '@/components/AppCard.vue';
-  import AppTitle from '@/components/AppTitle.vue';
-  import PoolDashboardStatus from '@/components/pool/dashboard/PoolDashboardStatus.vue';
-  import ProgressBar from '@/components/ProgressBar.vue';
+import AppBadge from "@/components/AppBadge.vue";
+import AppCard from "@/components/AppCard.vue";
+import AppTitle from "@/components/AppTitle.vue";
+import ProgressBar from "@/components/ProgressBar.vue";
+import PoolDashboardStatus from "@/components/pool/dashboard/PoolDashboardStatus.vue";
 </script>
 
 <style lang="postcss" scoped>
-  .pool-dashboard-view {
-    display: flex;
-    padding: 2rem;
-    gap: 2rem;
-  }
+.pool-dashboard-view {
+  display: flex;
+  padding: 2rem;
+  gap: 2rem;
+}
 
-  .item {
-    min-width: 37rem;
-  }
+.item {
+  min-width: 37rem;
+}
 </style>

@@ -1,62 +1,62 @@
-import PoolDashboardView from '@/views/pool/PoolDashboardView.vue';
-import PoolAlarmsView from '@/views/pool/PoolAlarmsView.vue';
-import PoolStatsView from '@/views/pool/PoolStatsView.vue';
-import PoolSystemView from '@/views/pool/PoolSystemView.vue';
-import PoolNetworkView from '@/views/pool/PoolNetworkView.vue';
-import PoolStorageView from '@/views/pool/PoolStorageView.vue';
-import PoolTasksView from '@/views/pool/PoolTasksView.vue';
-import PoolHostsView from '@/views/pool/PoolHostsView.vue';
-import PoolVmsView from '@/views/pool/PoolVmsView.vue';
-import PoolRootView from '@/views/pool/PoolRootView.vue';
+import PoolAlarmsView from "@/views/pool/PoolAlarmsView.vue";
+import PoolDashboardView from "@/views/pool/PoolDashboardView.vue";
+import PoolHostsView from "@/views/pool/PoolHostsView.vue";
+import PoolNetworkView from "@/views/pool/PoolNetworkView.vue";
+import PoolRootView from "@/views/pool/PoolRootView.vue";
+import PoolStatsView from "@/views/pool/PoolStatsView.vue";
+import PoolStorageView from "@/views/pool/PoolStorageView.vue";
+import PoolSystemView from "@/views/pool/PoolSystemView.vue";
+import PoolTasksView from "@/views/pool/PoolTasksView.vue";
+import PoolVmsView from "@/views/pool/PoolVmsView.vue";
 
 export default {
-  path: '/pool/:uuid',
+  path: "/pool/:uuid",
   component: PoolRootView,
-  redirect: { name: 'pool.dashboard' },
+  redirect: { name: "pool.dashboard" },
   children: [
     {
-      path: 'dashboard',
-      name: 'pool.dashboard',
+      path: "dashboard",
+      name: "pool.dashboard",
       component: PoolDashboardView,
     },
     {
-      path: 'alarms',
-      name: 'pool.alarms',
+      path: "alarms",
+      name: "pool.alarms",
       component: PoolAlarmsView,
     },
     {
-      path: 'stats',
-      name: 'pool.stats',
+      path: "stats",
+      name: "pool.stats",
       component: PoolStatsView,
     },
     {
-      path: 'system',
-      name: 'pool.system',
+      path: "system",
+      name: "pool.system",
       component: PoolSystemView,
     },
     {
-      path: 'network',
-      name: 'pool.network',
+      path: "network",
+      name: "pool.network",
       component: PoolNetworkView,
     },
     {
-      path: 'storage',
-      name: 'pool.storage',
+      path: "storage",
+      name: "pool.storage",
       component: PoolStorageView,
     },
     {
-      path: 'tasks',
-      name: 'pool.tasks',
+      path: "tasks",
+      name: "pool.tasks",
       component: PoolTasksView,
     },
     {
-      path: 'hosts',
-      name: 'pool.hosts',
+      path: "hosts",
+      name: "pool.hosts",
       component: PoolHostsView,
     },
     {
-      path: 'vms',
-      name: 'pool.vms',
+      path: "vms",
+      name: "pool.vms",
       component: PoolVmsView,
     },
   ],

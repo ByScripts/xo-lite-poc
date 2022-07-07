@@ -21,62 +21,62 @@
 </template>
 
 <script lang="ts" setup>
-  import AppTitle from '@/components/AppTitle.vue';
-  import ProgressCircle from '@/components/ProgressCircle.vue';
-  import { computed } from 'vue';
+import { computed } from "vue";
+import AppTitle from "@/components/AppTitle.vue";
+import ProgressCircle from "@/components/ProgressCircle.vue";
 
-  const props = defineProps<{
-    label: string
-    active: number
-    total: number
-  }>();
+const props = defineProps<{
+  label: string;
+  active: number;
+  total: number;
+}>();
 
-  const inactive = computed(() => props.total - props.active);
+const inactive = computed(() => props.total - props.active);
 </script>
 
 <style lang="postcss" scoped>
-  .pool-dashboard-status-item {
-    display: flex;
-    gap: 3.4rem;
-  }
+.pool-dashboard-status-item {
+  display: flex;
+  gap: 3.4rem;
+}
 
-  .progress-circle {
-    width: 6.4rem;
-  }
+.progress-circle {
+  width: 6.4rem;
+}
 
-  .content {
-    flex: 1;
-  }
+.content {
+  flex: 1;
+}
 
-  .bullet {
-    width: 1.3rem;
-    height: 1.3rem;
-    border-radius: 0.65rem;
-    background-color: var(--color-green-infra-base);
+.bullet {
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 0.65rem;
+  background-color: var(--color-green-infra-base);
 
-    &.inactive {
-      background-color: var(--color-blue-scale-400)
-    }
+  &.inactive {
+    background-color: var(--color-blue-scale-400);
   }
+}
 
-  .status-line {
-    display: flex;
-    gap: 1.5rem;
-    flex: 1;
-    font-weight: 400;
-    font-size: 1.6rem;
-    align-items: center;
-  }
+.status-line {
+  display: flex;
+  gap: 1.5rem;
+  flex: 1;
+  font-weight: 400;
+  font-size: 1.6rem;
+  align-items: center;
+}
 
-  .label {
-    margin-right: auto;
-  }
+.label {
+  margin-right: auto;
+}
 
-  .total {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 1rem;
-    font-weight: 600;
-    text-transform: uppercase;
-  }
+.total {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
 </style>

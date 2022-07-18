@@ -38,7 +38,7 @@ watchEffect(() => {
   overflow: auto;
   width: 37rem;
   max-width: 37rem;
-  height: calc(100vh - 8rem);
+  height: calc(100vh - 9rem);
   padding: 0.5rem;
   background-color: var(--background-color-primary);
   border-right: 1px solid var(--color-blue-scale-400);
@@ -47,5 +47,7 @@ watchEffect(() => {
 .main {
   flex: 1;
   background-color: var(--background-color-secondary);
+  height: calc(100vh - 9rem);
+  overflow: auto;
 }
 </style>

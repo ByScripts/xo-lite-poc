@@ -1,6 +1,6 @@
 import { JSONRPCClient } from "json-rpc-2.0";
 
-export type ObjectType =
+export type RawObjectType =
   | "Bond"
   | "Certificate"
   | "Cluster"
@@ -56,9 +56,16 @@ export type ObjectType =
   | "task"
   | "tunnel";
 
-export type XenApiRecord = {
+export type PowerState = "Running" | "Paused" | "Halted" | "Suspended";
+
+export type ObjectType = Lowercase<RawObjectType>;
+
+export interface XenApiRecord {
+  $ref: string;
   uuid: string;
-};
+}
+
+type RawXenApiRecord<T extends XenApiRecord> = Omit<T, "$ref">;
 
 export interface XenApiPool extends XenApiRecord {
   name_label: string;
@@ -72,7 +79,8 @@ export interface XenApiHost extends XenApiRecord {
 
 export interface XenApiVm extends XenApiRecord {
   name_label: string;
-  power_state: "Running" | "Paused" | "Halted" | "Suspended";
+  name_description: string;
+  power_state: PowerState;
   resident_on: string;
   consoles: string[];
   is_control_domain: boolean;
@@ -97,15 +105,13 @@ export type XenApiVmGuestMetrics = XenApiRecord;
 
 type WatchCallbackResult = {
   id: string;
-  class: Lowercase<ObjectType>;
+  class: ObjectType;
   operation: "add" | "mod" | "del";
   ref: string;
   snapshot: object;
 };
 
-type WatchCallbackResults = WatchCallbackResult[];
-
-type WatchCallback = (results: WatchCallbackResults) => void;
+type WatchCallback = (results: WatchCallbackResult[]) => void;
 
 export default class XenApi {
   #client: JSONRPCClient;
@@ -159,12 +165,19 @@ export default class XenApi {
   }
 
   async loadRecords<T extends XenApiRecord>(
-    type: ObjectType
+    type: RawObjectType
   ): Promise<Map<string, T>> {
-    const result = await this.#call(`${type}.get_all_records`, [
-      this.sessionId,
+    const result = await this.#call<{ [key: string]: RawXenApiRecord<T> }>(
+      `${type}.get_all_records`,
+      [this.sessionId]
+    );
+
+    const entries = Object.entries(result).map<[string, T]>(([key, entry]) => [
+      key,
+      { $ref: key, ...entry } as T,
     ]);
-    return new Map(Object.entries<T>(result));
+
+    return new Map(entries);
   }
 
   async #watch() {

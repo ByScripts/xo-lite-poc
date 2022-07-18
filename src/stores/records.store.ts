@@ -7,9 +7,7 @@ export const useRecordsStore = defineStore("records", () => {
   const recordsByOpaqueRef = shallowReactive<Map<string, XenApiRecord>>(
     new Map()
   );
-  const opaqueRefsByObjectType = reactive<
-    Map<ObjectType, Set<string>>
-  >(
+  const opaqueRefsByObjectType = reactive<Map<ObjectType, Set<string>>>(
     new Map()
   );
   const uuidToOpaqueRefMapping = reactive<Map<string, string>>(new Map());
@@ -21,8 +19,7 @@ export const useRecordsStore = defineStore("records", () => {
     const xapi = await xenApiStore.getXapi();
     const loadedRecords = await xapi.loadRecords<T>(objectType);
 
-    const lowercaseObjectType =
-      objectType.toLocaleLowerCase() as ObjectType;
+    const lowercaseObjectType = objectType.toLocaleLowerCase() as ObjectType;
 
     if (!opaqueRefsByObjectType.has(lowercaseObjectType)) {
       opaqueRefsByObjectType.set(lowercaseObjectType, new Set());

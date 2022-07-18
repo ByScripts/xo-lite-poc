@@ -2,26 +2,26 @@
   <div class="pool-dashboard-view">
     <PoolDashboardStatus class="item" />
 
-    <AppCard style="min-width: 40rem">
-      <AppTitle type="h4">Storage usage</AppTitle>
+    <UiCard style="min-width: 40rem">
+      <UiTitle type="h4">Storage usage</UiTitle>
       <ProgressBar :value="65" style="margin: 1rem 0" />
       <ProgressBar :value="50" style="margin: 1rem 0" />
       <ProgressBar :value="40" style="margin: 1rem 0" />
       <ProgressBar :value="22" style="margin: 1rem 0" />
-    </AppCard>
+    </UiCard>
 
-    <AppCard>
-      <AppBadge>38/64 GB</AppBadge>
-    </AppCard>
+    <UiCard>
+      <UiBadge>38/64 GB</UiBadge>
+    </UiCard>
   </div>
 </template>
 
 <script lang="ts" setup>
-import AppBadge from "@/components/AppBadge.vue";
-import AppCard from "@/components/AppCard.vue";
-import AppTitle from "@/components/AppTitle.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 import PoolDashboardStatus from "@/components/pool/dashboard/PoolDashboardStatus.vue";
+import UiBadge from "@/components/ui/UiBadge.vue";
+import UiCard from "@/components/ui/UiCard.vue";
+import UiTitle from "@/components/ui/UiTitle.vue";
 </script>
 
 <style lang="postcss" scoped>

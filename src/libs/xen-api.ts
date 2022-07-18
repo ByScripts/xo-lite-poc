@@ -139,25 +139,51 @@ export default class XenApi {
     });
   }
 
-  async connect(login: string, password: string) {
+  async connectWithPassword(username: string, password: string) {
     this.#sessionId = await this.#call("session.login_with_password", [
-      login,
+      username,
       password,
     ]);
+
+    await this.loadTypes();
+
+    return this.#sessionId;
+  }
+
+  async connectWithSessionId(sessionId: string) {
+    this.#sessionId = sessionId;
+
+    try {
+      await this.#call("session.get_all_subject_identifiers", [
+        this.#sessionId,
+      ]);
+
+      await this.loadTypes();
+
+      return true;
+    } catch (error: any) {
+      if (error?.message === "SESSION_INVALID") {
+        return false;
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  disconnect() {
+    this.stopWatch();
+    this.#sessionId = undefined;
+  }
+
+  async loadTypes() {
     this.#types = (await this.#call<string[]>("system.listMethods"))
       .filter((method: string) => method.endsWith(".get_all_records"))
       .map((method: string) => method.slice(0, method.indexOf(".")))
       .filter((type: string) => type !== "message");
-
-    return this.#sessionId;
   }
 
   get sessionId() {
     return this.#sessionId;
-  }
-
-  set sessionId(value: string | undefined) {
-    this.#sessionId = value;
   }
 
   #call<T = any>(method: string, args: any[] = []): PromiseLike<T> {

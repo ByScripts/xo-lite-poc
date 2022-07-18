@@ -1,5 +1,8 @@
+import type { IconDefinition } from "@fortawesome/fontawesome-common-types";
+
 interface FilterablePropertyCommonConfig {
   title?: string;
+  icon?: IconDefinition;
 }
 
 interface FilterablePropertyStringConfig

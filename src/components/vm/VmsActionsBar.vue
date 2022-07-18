@@ -39,7 +39,7 @@ defineProps<{
 
 <style scoped>
 .vms-actions-bar {
-  padding: 1rem;
+  padding-bottom: 1rem;
   border-bottom: 1px solid var(--color-blue-scale-400);
   background-color: var(--background-color-primary);
 }

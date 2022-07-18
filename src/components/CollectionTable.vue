@@ -27,7 +27,7 @@
 <script lang="ts" setup>
 import { computed, toRef, watch } from "vue";
 import type { Filters } from "@/types/filter";
-import CollectionFilter from "@/components/filter/CollectionFilter.vue";
+import CollectionFilter from "@/components/CollectionFilter.vue";
 import UiTable from "@/components/ui/UiTable.vue";
 import useCollectionFilter from "@/composables/collection-filter.composable";
 import useFilteredCollection from "@/composables/filtered-collection.composable";

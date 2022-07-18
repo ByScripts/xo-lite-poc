@@ -54,7 +54,7 @@ const tag = computed(() => {
 
   &.h5 {
     font-size: 1.6rem;
-    font-weight: 700;
+    font-weight: 500;
   }
 
   &.h6 {

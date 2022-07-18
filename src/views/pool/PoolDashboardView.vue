@@ -27,7 +27,6 @@ import UiTitle from "@/components/ui/UiTitle.vue";
 <style lang="postcss" scoped>
 .pool-dashboard-view {
   display: flex;
-  padding: 2rem;
   gap: 2rem;
 }
 

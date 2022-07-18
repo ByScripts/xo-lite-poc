@@ -13,7 +13,7 @@
 </template>
 
 <script lang="ts" setup>
-  import CollectionFilter from "@/components/filter/CollectionFilter.vue";
+  import CollectionFilter from "@/components/CollectionFilter.vue";
   import useCollectionFilter from "@/composables/collection-filter.composable";
   import { computed } from "vue";
 

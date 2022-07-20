@@ -3,7 +3,7 @@
     <slot name="header" />
   </div>
   <ProgressBar
-    v-for="(item, index) in computedData.sortedTop5"
+    v-for="(item, index) in computedData.sortedArray"
     :key="index"
     :value="item.value"
     :label="item.label"
@@ -36,7 +36,7 @@ const computedData = computed(() => {
   const _data = props.data;
   let totalPercentUsage = 0;
   return {
-    sortedTop5: _data
+    sortedArray: _data
       .map((item) => {
         const value = Math.round((item.value / (item.maxValue ?? 100)) * 100);
         totalPercentUsage += value;

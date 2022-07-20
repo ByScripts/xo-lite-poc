@@ -1,14 +1,24 @@
 <template>
-  <div class="progress-bar">
-    <div class="progress-bar-fill" />
+  <div class="progress-bar-component">
+    <div class="progress-bar">
+      <div class="progress-bar-fill" />
+    </div>
+    <div class="badge" v-if="label !== undefined">
+      <span class="circle" />
+      {{ label }}
+      <AppBadge>{{ badgeValue ?? progressWithUnit }}</AppBadge>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { computed } from "vue";
+import AppBadge from "@/components/AppBadge.vue";
 
 interface Props {
   value: number;
+  badgeValue?: string | number;
+  label?: string;
   maxValue?: number;
 }
 
@@ -23,11 +33,25 @@ const progressWithUnit = computed(() => {
 </script>
 
 <style lang="postcss" scoped>
+.badge {
+  text-align: right;
+  margin: 1rem 0;
+}
+
+.circle {
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+  background-color: #716ac6;
+  border-radius: 1rem;
+}
+
 .progress-bar {
   overflow: hidden;
   height: 1.2rem;
   border-radius: 0.4rem;
   background-color: var(--color-blue-scale-400);
+  margin: 1rem 0;
 }
 
 .progress-bar-fill {

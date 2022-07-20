@@ -18,6 +18,7 @@
 
 <script lang="ts" setup>
 import ProgressBar from "@/components/ProgressBar.vue";
+import UsageBar from "@/components/UsageBar.vue";
 import PoolDashboardStatus from "@/components/pool/dashboard/PoolDashboardStatus.vue";
 import UiBadge from "@/components/ui/UiBadge.vue";
 import UiCard from "@/components/ui/UiCard.vue";

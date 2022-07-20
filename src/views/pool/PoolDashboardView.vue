@@ -3,15 +3,37 @@
     <PoolDashboardStatus class="item" />
 
     <UiCard style="min-width: 40rem">
-      <UiTitle type="h4">Storage usage</UiTitle>
-      <ProgressBar :value="65" style="margin: 1rem 0" />
-      <ProgressBar :value="50" style="margin: 1rem 0" />
-      <ProgressBar :value="40" style="margin: 1rem 0" />
-      <ProgressBar :value="22" style="margin: 1rem 0" />
-    </UiCard>
-
-    <UiCard>
-      <UiBadge>38/64 GB</UiBadge>
+      <UiTitle type="h4">RAM usage</UiTitle>
+      <UsageBar
+        title="Hosts"
+        :data="[
+          {
+            value: 65,
+            label: 'R620-L1',
+            badgeValue: '38/64 GB',
+          },
+          {
+            value: 48,
+            label: 'R620-L2',
+            badgeValue: '61/128 GB',
+          },
+          {
+            value: 23,
+            label: 'R620-L3',
+            badgeValue: '118/512 GB',
+          },
+          {
+            value: 12,
+            label: 'R620-L4',
+            badgeValue: '4/32 GB',
+          },
+          {
+            value: 6,
+            label: 'R620-L5',
+            badgeValue: '60/1000 GB',
+          },
+        ]"
+      />
     </UiCard>
   </div>
 </template>

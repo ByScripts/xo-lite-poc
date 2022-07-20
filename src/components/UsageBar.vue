@@ -1,65 +1,91 @@
 <template>
-  <p class="title">{{ title }} <span>Top 5</span></p>
+  <div class="header">
+    <slot name="header" />
+  </div>
   <ProgressBar
-    v-for="(item, index) in sortedTop5"
+    v-for="(item, index) in computedData.sortedTop5"
     :key="index"
-    :max-value="maxValue"
     :value="item.value"
     :label="item.label"
-    :badge-value="item.badgeValue"
+    :badge-label="item.badgeLabel"
   />
+  <div class="footer">
+    <slot name="footer" :total-percent="computedData.totalPercentUsage" />
+  </div>
 </template>
 
 <script lang="ts" setup>
 import { computed } from "vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 
-const props = defineProps<{
-  data: Array<{
-    value: number;
-    label?: string;
-    badgeValue?: string;
-  }>;
-  title?: string;
+interface Data {
+  value: number;
+  label?: string;
+  badgeLabel?: string;
   maxValue?: number;
-}>();
+}
 
-const sortedTop5 = computed(() => {
-  let _data = props.data;
-  _data = _data.sort((item, next) => next.value - item.value).slice(0, 5);
-  return _data;
+interface Props {
+  data: Array<Data>;
+  title?: string;
+}
+
+const props = defineProps<Props>();
+
+const computedData = computed(() => {
+  const _data = props.data;
+  let totalPercentUsage = 0;
+  return {
+    sortedTop5: _data
+      .map((item) => {
+        const value = Math.round((item.value / (item.maxValue ?? 100)) * 100);
+        totalPercentUsage += value;
+        return {
+          ...item,
+          value,
+        };
+      })
+      .sort((item, nextItem) => nextItem.value - item.value),
+    totalPercentUsage,
+  };
 });
+
 </script>
 
 <style scoped>
-.title {
+.header {
   color: var(--color-extra-blue-base);
   display: flex;
   justify-content: space-between;
   border-bottom: 1px solid var(--color-extra-blue-base);
   margin-bottom: 2rem;
+  font-size: 16px;
+  font-weight: 700;
+}
+.footer {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-blue-scale-300);
 }
 </style>
 
 <style>
-.progress-bar-component:nth-of-type(1) .progress-bar-fill,
-.progress-bar-component:nth-of-type(1) .circle {
-  background-color: var(--color-extra-blue-d60);
-}
 .progress-bar-component:nth-of-type(2) .progress-bar-fill,
 .progress-bar-component:nth-of-type(2) .circle {
-  background-color: var(--color-extra-blue-d40);
+  background-color: var(--color-extra-blue-d60);
 }
 .progress-bar-component:nth-of-type(3) .progress-bar-fill,
 .progress-bar-component:nth-of-type(3) .circle {
-  background-color: var(--color-extra-blue-d20);
+  background-color: var(--color-extra-blue-d40);
 }
 .progress-bar-component:nth-of-type(4) .progress-bar-fill,
 .progress-bar-component:nth-of-type(4) .circle {
-  background-color: var(--color-extra-blue-l20);
+  background-color: var(--color-extra-blue-d20);
 }
-.progress-bar-component:nth-of-type(5) .progress-bar-fill,
-.progress-bar-component:nth-of-type(5) .circle {
+.progress-bar-component .progress-bar-fill,
+.progress-bar-component .circle {
   background-color: var(--color-extra-blue-l20);
 }
 </style>

@@ -6,7 +6,7 @@
     <div class="badge" v-if="label !== undefined">
       <span class="circle" />
       {{ label }}
-      <AppBadge>{{ badgeValue ?? progressWithUnit }}</AppBadge>
+      <AppBadge>{{ badgeLabel ?? progressWithUnit }}</AppBadge>
     </div>
   </div>
 </template>
@@ -17,7 +17,7 @@ import AppBadge from "@/components/AppBadge.vue";
 
 interface Props {
   value: number;
-  badgeValue?: string | number;
+  badgeLabel?: string | number;
   label?: string;
   maxValue?: number;
 }

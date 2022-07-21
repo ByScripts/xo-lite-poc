@@ -16,10 +16,10 @@ import { computed } from "vue";
 import AppBadge from "@/components/AppBadge.vue";
 
 interface Props {
-  value: number;
   badgeLabel?: string | number;
   label?: string;
   maxValue?: number;
+  value: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -34,31 +34,31 @@ const progressWithUnit = computed(() => {
 
 <style lang="postcss" scoped>
 .badge {
-  text-align: right;
   margin: 1rem 0;
+  text-align: right;
 }
 
 .bar {
-  overflow: hidden;
-  height: 1.2rem;
-  border-radius: 0.4rem;
   background-color: var(--color-blue-scale-400);
+  border-radius: 0.4rem;
+  height: 1.2rem;
   margin: 1rem 0;
+  overflow: hidden;
 }
 
 .bar-fill {
   animation: progress 1s ease-out forwards;
-  width: v-bind(progressWithUnit);
-  height: 1.2rem;
   background-color: var(--color-extra-blue-d20);
+  height: 1.2rem;
+  width: v-bind(progressWithUnit);
 }
 
 .circle {
+  background-color: var(--color-extra-blue-d20);
+  border-radius: 1rem;
   display: inline-block;
   height: 10px;
   width: 10px;
-  background-color: var(--color-extra-blue-d20);
-  border-radius: 1rem;
 }
 
 @keyframes progress {

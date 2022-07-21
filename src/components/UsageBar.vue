@@ -24,10 +24,10 @@ import { computed } from "vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 
 interface Data {
-  value: number;
-  label?: string;
   badgeLabel?: string;
+  label?: string;
   maxValue?: number;
+  value: number;
 }
 
 interface Props {
@@ -59,20 +59,20 @@ const totalValue = computed(() =>
 
 <style scoped lang="postcss">
 .header {
+  border-bottom: 1px solid var(--color-extra-blue-base);
   color: var(--color-extra-blue-base);
   display: flex;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--color-extra-blue-base);
-  margin-bottom: 2rem;
   font-size: 16px;
   font-weight: 700;
+  justify-content: space-between;
+  margin-bottom: 2rem;
 }
 .footer {
+  color: var(--color-blue-scale-300);
   display: flex;
-  justify-content: space-between;
   font-weight: 700;
   font-size: 14px;
-  color: var(--color-blue-scale-300);
+  justify-content: space-between;
 }
 
 .progress-bar {

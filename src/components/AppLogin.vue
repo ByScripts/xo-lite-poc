@@ -6,22 +6,30 @@
       <input v-model="login" name="login" readonly type="text" />
       <input
         v-model="password"
+        :readonly="isConnecting"
         name="password"
         placeholder="Password"
         type="password"
       />
-      <input type="submit" value="Login" @disabled="xenApiStore.isConnecting" />
+      <UiButton :busy="isConnecting" type="submit">Login</UiButton>
     </form>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
+import { storeToRefs } from "pinia";
+import { onMounted, ref } from "vue";
+import UiButton from "@/components/ui/UiButton.vue";
 import { useXenApiStore } from "@/stores/xen-api.store";
 
 const xenApiStore = useXenApiStore();
+const { isConnecting } = storeToRefs(xenApiStore);
 const login = ref("root");
 const password = ref("");
+
+onMounted(() => {
+  xenApiStore.reconnect();
+});
 
 async function handleSubmit() {
   await xenApiStore.connect(login.value, password.value);
@@ -49,8 +57,8 @@ form {
 }
 
 h1 {
-  font-size: 900;
   font-size: 4.8rem;
+  font-weight: 900;
   line-height: 7.2rem;
   margin-bottom: 4.2rem;
 }
@@ -72,14 +80,5 @@ input {
   border: 1px solid var(--color-blue-scale-400);
   border-radius: 0.8rem;
   background-color: white;
-}
-
-input[type="submit"] {
-  width: 10rem;
-  margin: 2rem 0rem;
-  margin: 0;
-  color: var(--color-blue-scale-500);
-  border: none;
-  background-color: var(--color-extra-blue-base);
 }
 </style>

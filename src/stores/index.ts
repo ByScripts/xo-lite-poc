@@ -1,5 +1,5 @@
 import { computed, ref } from "vue";
-import type { ObjectType, XenApiRecord } from "@/libs/xen-api";
+import type { ObjectType, RawObjectType, XenApiRecord } from "@/libs/xen-api";
 import { useRecordsStore } from "@/stores/records.store";
 
 type Options<T extends XenApiRecord> = {
@@ -8,7 +8,7 @@ type Options<T extends XenApiRecord> = {
 };
 
 export function createRecordContext<T extends XenApiRecord>(
-  objectType: ObjectType,
+  objectType: RawObjectType,
   options: Options<T> = {}
 ) {
   let isInitialized = false;
@@ -30,7 +30,7 @@ export function createRecordContext<T extends XenApiRecord>(
     const xapiRecordsStore = useRecordsStore();
     let opaqueRefs: string[] = Array.from(
       xapiRecordsStore.getRecordsOpaqueRefs(
-        objectType.toLocaleLowerCase() as Lowercase<ObjectType>
+        objectType.toLocaleLowerCase() as ObjectType
       )
     );
 
@@ -52,14 +52,15 @@ export function createRecordContext<T extends XenApiRecord>(
     return opaqueRefs;
   });
 
-  function getRecord(opaqueRef: string) {
-    return useRecordsStore().getRecord<T>(opaqueRef);
-  }
+  const allRecords = computed(() =>
+    opaqueRefs.value.map((opaqueRef) => getRecord(opaqueRef))
+  );
 
-  function getRecordByUuid(uuid: string) {
-    const xapiRecordsStore = useRecordsStore();
-    return xapiRecordsStore.getRecordByUuid<T>(uuid);
-  }
+  const getRecord = (opaqueRef: string) =>
+    useRecordsStore().getRecord<T>(opaqueRef);
+
+  const getRecordByUuid = (uuid: string) =>
+    useRecordsStore().getRecordByUuid<T>(uuid);
 
   return {
     init,
@@ -67,5 +68,6 @@ export function createRecordContext<T extends XenApiRecord>(
     getRecord,
     getRecordByUuid,
     isReady,
+    allRecords,
   };
 }

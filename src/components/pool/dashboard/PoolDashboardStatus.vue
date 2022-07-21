@@ -1,28 +1,28 @@
 <template>
-  <AppCard>
-    <AppTitle type="h4">Status</AppTitle>
+  <UiCard>
+    <UiTitle type="h4">Status</UiTitle>
     <template v-if="isReady">
       <PoolDashboardStatusItem
         :active="activeHostsCount"
         :total="totalHostsCount"
         label="Hosts"
       />
-      <AppSeparator />
+      <UiSeparator />
       <PoolDashboardStatusItem
         :active="activeVmsCount"
         :total="totalVmsCount"
         label="VMs"
       />
     </template>
-  </AppCard>
+  </UiCard>
 </template>
 
 <script lang="ts" setup>
 import { computed } from "vue";
-import AppCard from "@/components/AppCard.vue";
-import AppSeparator from "@/components/AppSeparator.vue";
-import AppTitle from "@/components/AppTitle.vue";
 import PoolDashboardStatusItem from "@/components/pool/dashboard/PoolDashboardStatusItem.vue";
+import UiCard from "@/components/ui/UiCard.vue";
+import UiSeparator from "@/components/ui/UiSeparator.vue";
+import UiTitle from "@/components/ui/UiTitle.vue";
 import { useHostMetricsStore } from "@/stores/host-metrics.store";
 import { useVmStore } from "@/stores/vm.store";
 

@@ -1,7 +1,7 @@
 <template>
-  <div class="progress-bar-component">
-    <div class="progress-bar">
-      <div class="progress-bar-fill" />
+  <div class="progress-bar">
+    <div class="bar">
+      <div class="bar-fill" />
     </div>
     <div class="badge" v-if="label !== undefined">
       <span class="circle" />
@@ -38,15 +38,7 @@ const progressWithUnit = computed(() => {
   margin: 1rem 0;
 }
 
-.circle {
-  display: inline-block;
-  height: 10px;
-  width: 10px;
-  background-color: #716ac6;
-  border-radius: 1rem;
-}
-
-.progress-bar {
+.bar {
   overflow: hidden;
   height: 1.2rem;
   border-radius: 0.4rem;
@@ -54,11 +46,19 @@ const progressWithUnit = computed(() => {
   margin: 1rem 0;
 }
 
-.progress-bar-fill {
+.bar-fill {
   animation: progress 1s ease-out forwards;
   width: v-bind(progressWithUnit);
   height: 1.2rem;
   background-color: var(--color-extra-blue-d20);
+}
+
+.circle {
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+  background-color: var(--color-extra-blue-d20);
+  border-radius: 1rem;
 }
 
 @keyframes progress {

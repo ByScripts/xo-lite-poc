@@ -3,14 +3,19 @@
     <slot name="header" />
   </div>
   <ProgressBar
-    v-for="(item, index) in computedData.sortedArray"
-    :key="index"
-    :value="item.value"
-    :label="item.label"
+    v-for="(item, index) in items"
     :badge-label="item.badgeLabel"
+    :key="index"
+    :label="item.label"
+    :max-value="item.maxValue"
+    :value="item.value"
   />
   <div class="footer">
-    <slot name="footer" :total-percent="computedData.totalPercentUsage" />
+    <slot
+      name="footer"
+      :average-percent="averagePercent"
+      :total-value="totalValue"
+    />
   </div>
 </template>
 
@@ -26,33 +31,33 @@ interface Data {
 }
 
 interface Props {
-  data: Array<Data>;
+  data: Data[];
   title?: string;
 }
 
 const props = defineProps<Props>();
 
-const computedData = computed(() => {
-  const _data = props.data;
-  let totalPercentUsage = 0;
-  return {
-    sortedArray: _data
-      .map((item) => {
-        const value = Math.round((item.value / (item.maxValue ?? 100)) * 100);
-        totalPercentUsage += value;
-        return {
-          ...item,
-          value,
-        };
-      })
-      .sort((item, nextItem) => nextItem.value - item.value),
-    totalPercentUsage,
-  };
-});
+const items = computed(() =>
+  props.data
+    .map((item) => ({
+      ...item,
+      percent: Math.round((item.value / (item.maxValue ?? 100)) * 100),
+    }))
+    .sort((item, nextItem) => nextItem.percent - item.percent)
+);
 
+const averagePercent = computed(
+  () =>
+    items.value.reduce((total, item) => total + item.percent, 0) /
+    items.value.length
+);
+
+const totalValue = computed(() =>
+  items.value.reduce((total, item) => total + item.value, 0)
+);
 </script>
 
-<style scoped>
+<style scoped lang="postcss">
 .header {
   color: var(--color-extra-blue-base);
   display: flex;
@@ -69,23 +74,23 @@ const computedData = computed(() => {
   font-size: 14px;
   color: var(--color-blue-scale-300);
 }
-</style>
 
-<style>
-.progress-bar-component:nth-of-type(2) .progress-bar-fill,
-.progress-bar-component:nth-of-type(2) .circle {
-  background-color: var(--color-extra-blue-d60);
-}
-.progress-bar-component:nth-of-type(3) .progress-bar-fill,
-.progress-bar-component:nth-of-type(3) .circle {
-  background-color: var(--color-extra-blue-d40);
-}
-.progress-bar-component:nth-of-type(4) .progress-bar-fill,
-.progress-bar-component:nth-of-type(4) .circle {
-  background-color: var(--color-extra-blue-d20);
-}
-.progress-bar-component .progress-bar-fill,
-.progress-bar-component .circle {
-  background-color: var(--color-extra-blue-l20);
+.progress-bar {
+  &:nth-of-type(2) :deep(.bar-fill),
+  &:nth-of-type(2) :deep(.circle) {
+    background-color: var(--color-extra-blue-d60);
+  }
+  &:nth-of-type(3) :deep(.bar-fill),
+  &:nth-of-type(3) :deep(.circle) {
+    background-color: var(--color-extra-blue-d40);
+  }
+  &:nth-of-type(4) :deep(.bar-fill),
+  &:nth-of-type(4) :deep(.circle) {
+    background-color: var(--color-extra-blue-d20);
+  }
+  &:deep(.bar-fill),
+  &:deep(.circle) {
+    background-color: var(--color-extra-blue-l20);
+  }
 }
 </style>

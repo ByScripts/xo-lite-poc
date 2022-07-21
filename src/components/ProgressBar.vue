@@ -6,14 +6,14 @@
     <div class="badge" v-if="label !== undefined">
       <span class="circle" />
       {{ label }}
-      <AppBadge>{{ badgeLabel ?? progressWithUnit }}</AppBadge>
+      <UiBadge>{{ badgeLabel ?? progressWithUnit }}</UiBadge>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { computed } from "vue";
-import AppBadge from "@/components/AppBadge.vue";
+import UiBadge from "@/components/ui/UiBadge.vue";
 
 interface Props {
   badgeLabel?: string | number;

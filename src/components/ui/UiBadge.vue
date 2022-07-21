@@ -1,11 +1,11 @@
 <template>
-  <span class="app-badge">
+  <span class="ui-badge">
     <slot />
   </span>
 </template>
 
 <style lang="postcss" scoped>
-.app-badge {
+.ui-badge {
   font-size: 1.2rem;
   font-weight: 500;
   line-height: 100%;

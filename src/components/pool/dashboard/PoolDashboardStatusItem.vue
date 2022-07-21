@@ -2,7 +2,7 @@
   <div class="pool-dashboard-status-item">
     <ProgressCircle :max-value="total" :value="active" />
     <div class="content">
-      <AppTitle type="h5">{{ label }}</AppTitle>
+      <UiTitle type="h5">{{ label }}</UiTitle>
       <div class="status-line">
         <div class="bullet" />
         <div class="label">Active</div>
@@ -22,8 +22,8 @@
 
 <script lang="ts" setup>
 import { computed } from "vue";
-import AppTitle from "@/components/AppTitle.vue";
 import ProgressCircle from "@/components/ProgressCircle.vue";
+import UiTitle from "@/components/ui/UiTitle.vue";
 
 const props = defineProps<{
   label: string;

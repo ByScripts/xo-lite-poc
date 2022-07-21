@@ -1,5 +1,5 @@
 <template>
-  <component :is="tag" :class="type" class="app-title">
+  <component :is="tag" :class="type" class="ui-title">
     <slot />
   </component>
 </template>
@@ -21,7 +21,7 @@ const tag = computed(() => {
 </script>
 
 <style lang="postcss" scoped>
-.app-title {
+.ui-title {
   line-height: 150%;
   align-self: stretch;
   flex-grow: 0;
@@ -54,7 +54,7 @@ const tag = computed(() => {
 
   &.h5 {
     font-size: 1.6rem;
-    font-weight: 700;
+    font-weight: 500;
   }
 
   &.h6 {

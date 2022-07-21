@@ -1,24 +1,25 @@
 import { defineStore } from "pinia";
 import { reactive, shallowReactive } from "vue";
-import type { ObjectType, XenApiRecord } from "@/libs/xen-api";
+import type { ObjectType, RawObjectType, XenApiRecord } from "@/libs/xen-api";
 import { useXenApiStore } from "@/stores/xen-api.store";
 
 export const useRecordsStore = defineStore("records", () => {
   const recordsByOpaqueRef = shallowReactive<Map<string, XenApiRecord>>(
     new Map()
   );
-  const opaqueRefsByObjectType = reactive<
-    Map<Lowercase<ObjectType>, Set<string>>
-  >(new Map());
+  const opaqueRefsByObjectType = reactive<Map<ObjectType, Set<string>>>(
+    new Map()
+  );
   const uuidToOpaqueRefMapping = reactive<Map<string, string>>(new Map());
 
-  async function loadRecords<T extends XenApiRecord>(objectType: ObjectType) {
+  async function loadRecords<T extends XenApiRecord>(
+    objectType: RawObjectType
+  ) {
     const xenApiStore = useXenApiStore();
     const xapi = await xenApiStore.getXapi();
     const loadedRecords = await xapi.loadRecords<T>(objectType);
 
-    const lowercaseObjectType =
-      objectType.toLocaleLowerCase() as Lowercase<ObjectType>;
+    const lowercaseObjectType = objectType.toLocaleLowerCase() as ObjectType;
 
     if (!opaqueRefsByObjectType.has(lowercaseObjectType)) {
       opaqueRefsByObjectType.set(lowercaseObjectType, new Set());
@@ -33,7 +34,7 @@ export const useRecordsStore = defineStore("records", () => {
   }
 
   function addOrReplaceRecord<T extends XenApiRecord>(
-    objectType: Lowercase<ObjectType>,
+    objectType: ObjectType,
     opaqueRef: string,
     record: T
   ) {
@@ -42,7 +43,7 @@ export const useRecordsStore = defineStore("records", () => {
     uuidToOpaqueRefMapping.set(record.uuid, opaqueRef);
   }
 
-  function removeRecord(objectType: Lowercase<ObjectType>, opaqueRef: string) {
+  function removeRecord(objectType: ObjectType, opaqueRef: string) {
     recordsByOpaqueRef.delete(opaqueRef);
     opaqueRefsByObjectType.get(objectType)?.delete(opaqueRef);
 
@@ -71,7 +72,7 @@ export const useRecordsStore = defineStore("records", () => {
     }
   }
 
-  function getRecordsOpaqueRefs(objectType: Lowercase<ObjectType>) {
+  function getRecordsOpaqueRefs(objectType: ObjectType) {
     return opaqueRefsByObjectType.get(objectType) || new Set();
   }
 

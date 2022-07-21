@@ -9,7 +9,7 @@
       <template #actions>
         <InfraAction
           :icon="isExpanded ? faAngleDown : faAngleUp"
-          @click="toggle"
+          @click="toggle()"
         />
       </template>
     </InfraItemLabel>
@@ -25,10 +25,10 @@ import {
   faAngleUp,
   faServer,
 } from "@fortawesome/free-solid-svg-icons";
+import { useToggle } from "@vueuse/core";
 import InfraAction from "@/components/infra/InfraAction.vue";
 import InfraItemLabel from "@/components/infra/InfraItemLabel.vue";
 import InfraVmList from "@/components/infra/InfraVmList.vue";
-import useToggle from "@/composables/toggle.composable";
 import { useHostStore } from "@/stores/host.store";
 import { useUiStore } from "@/stores/ui.store";
 
@@ -44,7 +44,7 @@ const uiStore = useUiStore();
 const isCurrentHost = computed(
   () => props.hostOpaqueRef === uiStore.currentHostOpaqueRef
 );
-const { isActive: isExpanded, toggle } = useToggle();
+const [isExpanded, toggle] = useToggle();
 </script>
 
 <style lang="postcss" scoped>

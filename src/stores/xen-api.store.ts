@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { computed, ref, watchEffect } from "vue";
+import { ref, watchEffect } from "vue";
 import { useLocalStorage } from "@vueuse/core";
 import type { XenApiRecord } from "@/libs/xen-api";
 import XenApi from "@/libs/xen-api";
@@ -15,8 +15,7 @@ import { useVmStore } from "@/stores/vm.store";
 export const useXenApiStore = defineStore("xen-api", () => {
   const xenApi = new XenApi(import.meta.env.VITE_XO_HOST);
   const currentSessionId = useLocalStorage<string | null>("sessionId", null);
-  xenApi.sessionId = currentSessionId.value ?? undefined;
-  const isConnected = computed(() => currentSessionId.value !== null);
+  const isConnected = ref(false);
   const isConnecting = ref(false);
 
   async function getXapi() {
@@ -76,22 +75,43 @@ export const useXenApiStore = defineStore("xen-api", () => {
     consoleStore.init();
   }
 
-  async function connect(login: string, password: string) {
-    isConnecting.value = true;
-    currentSessionId.value = await xenApi.connect(login, password);
-    isConnecting.value = false;
+  async function connect(username: string, password: string) {
+    try {
+      currentSessionId.value = await xenApi.connectWithPassword(
+        username,
+        password
+      );
+      isConnected.value = true;
+    } finally {
+      isConnecting.value = false;
+    }
+  }
+
+  async function reconnect() {
+    if (!currentSessionId.value) {
+      return;
+    }
+
+    try {
+      isConnecting.value = true;
+      isConnected.value = await xenApi.connectWithSessionId(
+        currentSessionId.value
+      );
+    } finally {
+      isConnecting.value = false;
+    }
   }
 
   function disconnect() {
     currentSessionId.value = null;
-    xenApi.sessionId = undefined;
-    xenApi.stopWatch();
+    xenApi.disconnect();
   }
 
   return {
     isConnected,
     isConnecting,
     connect,
+    reconnect,
     disconnect,
     init,
     getXapi,

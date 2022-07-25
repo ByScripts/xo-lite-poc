@@ -1,17 +1,13 @@
 <template>
-  <div class="filters">
-    <span
-      v-for="(activeFilter, index) in activeFilters"
-      :key="index"
-      class="filter"
+  <UiFilterGroup>
+    <UiFilter
+      v-for="filter in activeFilters"
+      :key="filter"
+      @edit="editFilter(filter)"
+      @remove="emit('removeFilter', filter)"
     >
-      {{ activeFilter }}
-      <FontAwesomeIcon
-        :icon="faRemove"
-        class="remove"
-        @click="emit('removeFilter', index)"
-      />
-    </span>
+      {{ filter }}
+    </UiFilter>
 
     <UiButton
       :icon-left="faPlus"
@@ -21,229 +17,179 @@
     >
       Add filter
     </UiButton>
-  </div>
+  </UiFilterGroup>
 
   <UiModal v-if="isOpen">
-    <div v-if="!selectedProperty">Select a property below...</div>
-    <form v-else @submit.prevent="handleSubmit">
-      {{ selectedProperty.config.title ?? selectedProperty.name }}
-
-      <template v-if="selectedProperty.config.type === 'string'">
-        <select v-model="filterType">
-          <option value="stringEquals">equals</option>
-          <option value="stringContains">contains</option>
-          <option value="stringStartsWith">starts with</option>
-          <option value="stringEndsWith">ends with</option>
-          <option value="stringRegex">matches regex</option>
-        </select>
-        <input v-model="filterValue" />
-      </template>
-
-      <select
-        v-else-if="selectedProperty.config.type === 'enum'"
-        v-model="filterValue"
-      >
-        <option v-if="!filterValue" />
-        <option
-          v-for="choice in selectedProperty.config.choices"
-          :key="choice"
-          :value="choice"
-        >
-          {{ choice }}
-        </option>
-      </select>
-
-      <button type="submit">Add</button>
-    </form>
-
-    <UiSeparator />
-
-    <UiTitle class="properties-title" type="h5">Properties</UiTitle>
-    <div class="available-filters">
-      <div
-        v-for="(config, property) in availableFilters"
-        :key="property"
-        :class="{
-          selected: selectedProperty && selectedProperty.name === property,
-        }"
-        class="available-filter"
-        @click="selectedProperty = { name: property, config }"
-      >
-        <FontAwesomeIcon :icon="filterIcon(config)" fixed-width />
-        {{ config.title ?? property }}
+    <form @submit.prevent="handleSubmit">
+      <div class="rows">
+        <CollectionFilterRow
+          v-for="(newFilter, index) in newFilters"
+          :key="newFilter.id"
+          v-model="newFilters[index]"
+          :available-filters="availableFilters"
+          @remove="removeNewFilter"
+        />
       </div>
-    </div>
 
-    <div style="text-align: right">
-      <UiButton color="action" @click="close">Cancel</UiButton>
-    </div>
+      <div
+        v-if="newFilters.some((filter) => filter.isAdvanced)"
+        class="available-properties"
+      >
+        Available properties for advanced filter:
+        <div class="properties">
+          <UiBadge
+            v-for="(filter, property) in availableFilters"
+            :key="property"
+            :icon="getFilterIcon(filter)"
+          >
+            {{ property }}
+          </UiBadge>
+        </div>
+      </div>
+
+      <UiButtonGroup>
+        <UiButton color="action" @click="addNewFilter">+OR</UiButton>
+        <UiButton :disabled="!isFilterValid" type="submit">
+          {{ editedFilter ? "Update" : "Add" }}
+        </UiButton>
+        <UiButton color="action" @click="handleCancel">Cancel</UiButton>
+      </UiButtonGroup>
+    </form>
   </UiModal>
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from "vue";
-import type {
-  FilterType,
-  FilterablePropertyConfig,
-  Filters,
-} from "@/types/filter";
-import {
-  faAlignLeft,
-  faCheckSquare,
-  faFont,
-  faHashtag,
-  faList,
-  faPlus,
-  faRemove,
-} from "@fortawesome/free-solid-svg-icons";
+import { Or, parse } from "complex-matcher";
+import { computed, ref } from "vue";
+import type { Filters, NewFilter } from "@/types/filter";
+import { faPlus } from "@fortawesome/free-solid-svg-icons";
+import CollectionFilterRow from "@/components/CollectionFilterRow.vue";
+import UiBadge from "@/components/ui/UiBadge.vue";
 import UiButton from "@/components/ui/UiButton.vue";
+import UiButtonGroup from "@/components/ui/UiButtonGroup.vue";
+import UiFilter from "@/components/ui/UiFilter.vue";
+import UiFilterGroup from "@/components/ui/UiFilterGroup.vue";
 import UiModal from "@/components/ui/UiModal.vue";
-import UiSeparator from "@/components/ui/UiSeparator.vue";
-import UiTitle from "@/components/ui/UiTitle.vue";
 import useModal from "@/composables/modal.composable";
+import { getFilterIcon } from "@/libs/utils";
 
-defineProps<{
-  activeFilters: unknown;
-  availableFilters: Filters<unknown>;
+const props = defineProps<{
+  activeFilters: string[];
+  availableFilters: Filters;
 }>();
 
 const emit = defineEmits<{
-  (
-    event: "addFilter",
-    property: string,
-    filterType: string,
-    filterValue: string
-  ): void;
-  (event: "removeFilter", index: number): void;
+  (event: "addFilter", filter: string): void;
+  (event: "removeFilter", filter: string): void;
 }>();
 
-const { open, close, isOpen } = useModal();
+const { isOpen, open, close } = useModal();
+const newFilters = ref<NewFilter[]>([]);
+let newFilterId = 0;
 
-const selectedProperty = ref<{
-  name: string;
-  config: FilterablePropertyConfig;
-}>();
-const filterType = ref<FilterType>();
-const filterValue = ref();
+const addNewFilter = () =>
+  newFilters.value.push({
+    id: newFilterId++,
+    content: "",
+    isAdvanced: false,
+    builder: { property: "", comparison: "", value: "" },
+  });
 
-function filterIcon(config: FilterablePropertyConfig) {
-  if (config.icon) {
-    return config.icon;
+const removeNewFilter = (id: number) => {
+  const index = newFilters.value.findIndex((newFilter) => newFilter.id === id);
+  if (index >= 0) {
+    newFilters.value.splice(index, 1);
   }
+};
 
-  switch (config.type) {
-    case "string":
-      return faFont;
-    case "text":
-      return faAlignLeft;
-    case "enum":
-      return faList;
-    case "number":
-      return faHashtag;
-    case "boolean":
-      return faCheckSquare;
-    default:
-  }
-}
+addNewFilter();
 
-watch(selectedProperty, (value) => {
-  if (!value) {
-    return;
-  }
-
-  switch (value.config.type) {
-    case "string":
-      return (filterType.value = "stringContains");
-  }
-});
-
-watch(isOpen, (value) => {
-  if (!value) {
-    selectedProperty.value = undefined;
-    filterType.value = undefined;
-    filterValue.value = undefined;
-  }
-});
-
-function handleSubmit() {
-  if (!selectedProperty.value) {
-    return;
-  }
-
-  if (selectedProperty.value.config.type === "enum") {
-    filterType.value = "stringEquals";
-  }
-
-  if (!filterType.value) {
-    return;
-  }
-
-  emit(
-    "addFilter",
-    selectedProperty.value.name,
-    filterType.value,
-    filterValue.value
+const generatedFilter = computed(() => {
+  const filters = newFilters.value.filter(
+    (newFilter) => newFilter.content !== ""
   );
+
+  if (filters.length === 0) {
+    return "";
+  }
+
+  if (filters.length === 1) {
+    return filters[0].content;
+  }
+
+  return `|(${filters.map((filter) => filter.content).join(" ")})`;
+});
+
+const isFilterValid = computed(() => generatedFilter.value !== "");
+
+const editedFilter = ref();
+
+const editFilter = (filter: string) => {
+  const parsedFilter = parse(filter);
+
+  const nodes =
+    parsedFilter instanceof Or ? parsedFilter.children : [parsedFilter];
+
+  newFilters.value = nodes.map((node) => ({
+    id: newFilterId++,
+    content: node.toString(),
+    isAdvanced: true,
+    builder: { property: "", comparison: "", value: "" },
+  }));
+  editedFilter.value = filter;
+  open();
+};
+
+const reset = () => {
+  editedFilter.value = "";
+  newFilters.value = [];
+  addNewFilter();
+};
+
+const handleSubmit = () => {
+  if (editedFilter.value) {
+    emit("removeFilter", editedFilter.value);
+  }
+  emit("addFilter", generatedFilter.value);
+  reset();
   close();
-}
+};
+
+const handleCancel = () => {
+  reset();
+  close();
+};
 </script>
 
-<style scoped>
-.properties-title {
-  color: var(--color-extra-blue-base);
-}
-
-.available-filters {
-  display: flex;
-  flex-direction: column;
-}
-
-.available-filter {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  height: 3.2rem;
-  font-size: 1.4rem;
-  font-weight: 400;
-  cursor: pointer;
-  text-transform: uppercase;
-
-  &:hover {
-    color: var(--color-grayscale-200);
-  }
-
-  &.selected {
-    color: var(--color-extra-blue-base);
-  }
-}
-
-.filters {
-  display: flex;
-  padding: 1rem;
-  background-color: var(--background-color-primary);
-  gap: 1rem;
-}
-
-.filter {
-  font-size: 1.6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 3.4rem;
-  padding: 0 1rem;
-  color: var(--color-extra-blue-base);
-  border: 1px solid var(--color-extra-blue-base);
-  border-radius: 1.7rem;
-  background-color: var(--background-color-extra-blue);
-  gap: 1rem;
-}
-
+<style lang="postcss" scoped>
 .add-filter {
   height: 3.4rem;
 }
 
-.remove {
-  cursor: pointer;
-  color: red;
+.properties {
+  font-size: 1.6rem;
+  margin-top: 1rem;
+
+  ul {
+    margin-left: 1rem;
+  }
+
+  li {
+    cursor: pointer;
+
+    &:hover {
+      opacity: 0.7;
+    }
+  }
+}
+
+.available-properties {
+  margin-top: 1rem;
+}
+
+.properties {
+  display: flex;
+  margin-top: 0.6rem;
+  gap: 0.5rem;
 }
 </style>

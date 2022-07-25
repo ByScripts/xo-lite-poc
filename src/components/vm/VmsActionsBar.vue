@@ -37,7 +37,7 @@ defineProps<{
 }>();
 </script>
 
-<style scoped>
+<style lang="postcss" scoped>
 .vms-actions-bar {
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--color-blue-scale-400);

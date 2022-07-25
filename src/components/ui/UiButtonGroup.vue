@@ -17,7 +17,7 @@ provide("isButtonGroupDisabled", toRef(props, "disabled"));
 provide("buttonGroupColor", toRef(props, "color"));
 </script>
 
-<style scoped>
+<style lang="postcss" scoped>
 .ui-button-group {
   display: flex;
   justify-content: left;

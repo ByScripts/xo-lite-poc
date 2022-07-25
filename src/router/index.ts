@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import pool from "@/router/pool";
+import DemoView from "@/views/DemoView.vue";
 import HomeView from "@/views/HomeView.vue";
 import HostDashboardView from "@/views/host/HostDashboardView.vue";
 import HostRootView from "@/views/host/HostRootView.vue";
@@ -13,6 +14,11 @@ const router = createRouter({
       path: "/",
       name: "home",
       component: HomeView,
+    },
+    {
+      path: "/demo",
+      name: "demo",
+      component: DemoView,
     },
     pool,
     {

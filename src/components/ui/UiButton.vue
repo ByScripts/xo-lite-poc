@@ -2,6 +2,7 @@
   <button
     :class="`color-${buttonColor}`"
     :disabled="isBusy || isDisabled"
+    :type="type || 'button'"
     class="ui-button"
   >
     <FontAwesomeIcon v-if="isBusy" :icon="faSpinner" spin />
@@ -16,6 +17,7 @@ import type { IconDefinition } from "@fortawesome/fontawesome-common-types";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 
 const props = defineProps<{
+  type?: "button" | "reset" | "submit";
   busy?: boolean;
   disabled?: boolean;
   iconLeft?: IconDefinition;
@@ -39,7 +41,7 @@ const buttonColor = computed(() => props.color || unref(buttonGroupColor));
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 4.4rem;
+  height: 3.8rem;
   margin: 0;
   padding: 0 1rem;
   color: var(--color-blue-scale-500);

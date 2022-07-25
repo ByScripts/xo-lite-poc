@@ -1,54 +1,41 @@
 import type { IconDefinition } from "@fortawesome/fontawesome-common-types";
 
-interface FilterablePropertyCommonConfig {
-  title?: string;
+export type FilterType = "string" | "boolean" | "number" | "enum";
+
+export interface FilterComparison {
+  label: string;
+  pattern: string;
+  default?: boolean;
+  before?: string | IconDefinition;
+  after?: string | IconDefinition;
+  escape?: boolean;
+}
+
+interface FilterCommon {
+  label?: string;
   icon?: IconDefinition;
 }
 
-interface FilterablePropertyStringConfig
-  extends FilterablePropertyCommonConfig {
-  type: "string";
-}
-
-interface FilterablePropertyTextConfig extends FilterablePropertyCommonConfig {
-  type: "text";
-}
-
-interface FilterablePropertyNumberConfig
-  extends FilterablePropertyCommonConfig {
-  type: "number";
-}
-
-interface FilterablePropertyBooleanConfig
-  extends FilterablePropertyCommonConfig {
-  type: "boolean";
-}
-
-interface FilterablePropertyEnumConfig extends FilterablePropertyCommonConfig {
+export interface FilterEnum extends FilterCommon {
   type: "enum";
   choices: string[];
 }
 
-export type FilterablePropertyConfig =
-  | FilterablePropertyStringConfig
-  | FilterablePropertyTextConfig
-  | FilterablePropertyBooleanConfig
-  | FilterablePropertyNumberConfig
-  | FilterablePropertyEnumConfig;
+interface FilterOther extends FilterCommon {
+  type: Exclude<FilterType, "enum">;
+}
 
-export type Filters<T> = {
-  [key in keyof T]?: FilterablePropertyConfig;
-};
+export type Filter = FilterEnum | FilterOther;
 
-export type FilterType =
-  | "stringEquals"
-  | "stringContains"
-  | "stringStartsWith"
-  | "stringEndsWith"
-  | "stringRegex"
-  | "numberEquals"
-  | "numberGreaterThan"
-  | "numberGreaterThanOrEquals"
-  | "numberLessThan"
-  | "numberLessThanOrEquals"
-  | "boolean";
+export type Filters = { [key: string]: Filter };
+
+export interface SelectedFilter {
+  property: string | undefined;
+  filter: Filter | undefined;
+}
+
+export interface FilterRow {
+  selectedFilter: SelectedFilter;
+  selectedComparison?: FilterComparison;
+  filterValue: string;
+}

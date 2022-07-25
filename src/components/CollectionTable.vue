@@ -1,7 +1,7 @@
 <template>
   <CollectionFilter
     v-if="availableFilters"
-    :active-filters="activeFilters"
+    :active-filters="filters"
     :available-filters="availableFilters"
     @add-filter="addFilter"
     @remove-filter="removeFilter"
@@ -36,7 +36,7 @@ import type { XenApiRecord } from "@/libs/xen-api";
 
 const props = defineProps<{
   modelValue?: string[];
-  availableFilters?: Filters<XenApiRecord>;
+  availableFilters?: Filters;
   collection: XenApiRecord[];
 }>();
 
@@ -46,8 +46,7 @@ const emit = defineEmits<{
 
 const isSelectable = computed(() => props.modelValue !== undefined);
 
-const { activeFilters, addFilter, removeFilter, predicate } =
-  useCollectionFilter();
+const { filters, addFilter, removeFilter, predicate } = useCollectionFilter();
 
 const filteredCollection = useFilteredCollection(
   toRef(props, "collection"),
@@ -55,6 +54,7 @@ const filteredCollection = useFilteredCollection(
 );
 
 const usableRefs = computed(() => props.collection.map((item) => item.$ref));
+
 const selectableRefs = computed(() =>
   filteredCollection.value.map((item) => item.$ref)
 );

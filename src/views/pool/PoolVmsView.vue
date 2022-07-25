@@ -31,16 +31,15 @@ import CollectionTable from "@/components/CollectionTable.vue";
 import PowerStateIcon from "@/components/PowerStateIcon.vue";
 import UiCard from "@/components/ui/UiCard.vue";
 import VmsActionsBar from "@/components/vm/VmsActionsBar.vue";
-import type { XenApiVm } from "@/libs/xen-api";
 import { useVmStore } from "@/stores/vm.store";
 
 const vmStore = useVmStore();
 const { allRecords: vms } = storeToRefs(vmStore);
 
-const filters: Filters<XenApiVm> = {
-  name_label: { title: "VM Name", type: "string" },
+const filters: Filters = {
+  name_label: { label: "VM Name", type: "string" },
   power_state: {
-    title: "VM State",
+    label: "VM State",
     icon: faPowerOff,
     type: "enum",
     choices: ["Running", "Halted", "Paused"],

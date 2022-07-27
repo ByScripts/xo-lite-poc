@@ -20,9 +20,11 @@ export default function useCollectionFilter(
 
   if (config.queryStringParam) {
     const queryStringParam = config.queryStringParam;
-    watch(filters, (value) => {
-      router.replace({ query: { [queryStringParam]: value.join(" ") } });
-    });
+    watch(filters, (value) =>
+      router.replace({
+        query: { ...route.query, [queryStringParam]: value.join(" ") },
+      })
+    );
   }
 
   const addFilter = (filter: string) => {

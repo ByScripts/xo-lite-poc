@@ -1,6 +1,8 @@
 import { defineStore } from "pinia";
 import { ref, watchEffect } from "vue";
+import { createRecordContext } from "@/stores";
 import { useLocalStorage } from "@vueuse/core";
+import XapiStats from "@/libs/xapi-stats";
 import type { XenApiRecord } from "@/libs/xen-api";
 import XenApi from "@/libs/xen-api";
 import { useConsoleStore } from "@/stores/console.store";
@@ -14,6 +16,7 @@ import { useVmStore } from "@/stores/vm.store";
 
 export const useXenApiStore = defineStore("xen-api", () => {
   const xenApi = new XenApi(import.meta.env.VITE_XO_HOST);
+  const xapiStats = new XapiStats(xenApi);
   const currentSessionId = useLocalStorage<string | null>("sessionId", null);
   const isConnected = ref(false);
   const isConnecting = ref(false);
@@ -24,6 +27,14 @@ export const useXenApiStore = defineStore("xen-api", () => {
     }
 
     return xenApi;
+  }
+
+  function getXapiStats() {
+    if (!currentSessionId.value) {
+      throw new Error("Not connected to xapi");
+    }
+
+    return xapiStats;
   }
 
   async function init() {
@@ -64,6 +75,18 @@ export const useXenApiStore = defineStore("xen-api", () => {
     const hostMetricsStore = useHostMetricsStore();
     const vmMetricsStore = useVmMetricsStore();
     const vmGuestMetricsStore = useVmGuestMetricsStore();
+
+    /**
+     * const hosts = hostStore.allRecords;
+     * POUR CHAQUE HOST:
+     * - xapi.getHostStats(host.uuid)
+     * - mettre dans un store le result <host.uuid, result>
+     *
+     * - use case:
+     *   const hostStats = useHostStatsStore().allRecords;
+     *   const hostStats1 = hostStats.getRecordByUuid(hosts[0].uuid)
+     *
+     */
 
     await Promise.all([
       hostMetricsStore.init(),
@@ -115,6 +138,7 @@ export const useXenApiStore = defineStore("xen-api", () => {
     disconnect,
     init,
     getXapi,
+    getXapiStats,
     currentSessionId,
   };
 });

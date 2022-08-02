@@ -1,4 +1,7 @@
+import { utcParse } from "d3-time-format";
 import { JSONRPCClient } from "json-rpc-2.0";
+import {cancelable, ignoreErrors, pRetry} from 'promise-toolbox'
+import JSON5 from 'json5'
 
 export type RawObjectType =
   | "Bond"
@@ -54,7 +57,8 @@ export type RawObjectType =
   | "secret"
   | "subject"
   | "task"
-  | "tunnel";
+  | "tunnel"
+  | "host-stats";
 
 export type PowerState = "Running" | "Paused" | "Halted" | "Suspended";
 
@@ -72,6 +76,7 @@ export interface XenApiPool extends XenApiRecord {
 }
 
 export interface XenApiHost extends XenApiRecord {
+  address: string;
   name_label: string;
   metrics: string;
   resident_VMs: string[];
@@ -188,6 +193,36 @@ export default class XenApi {
 
   #call<T = any>(method: string, args: any[] = []): PromiseLike<T> {
     return this.#client.request(method, args);
+  }
+
+  async getHostServertime(host: XenApiHost) {
+    const serverLocaltime = (await this.#call("host.get_servertime", [
+      this.sessionId,
+      host.$ref,
+    ])) as string;
+    return Math.floor(this.parseDateTime(serverLocaltime) / 1e3);
+  }
+
+  @cancelable
+  async getResource($cancelToken: object, pathname: string, {host, query}: {host: XenApiHost, query: any}) {
+    const url = new URL('http://localhost')
+    url.protocol = window.location.protocol
+    url.hostname = host.address
+    url.pathname = pathname
+    url.search = new URLSearchParams({...query, session_id: this.#sessionId }).toString()
+
+    const response = await fetch(url)
+    return JSON5.parse(await response.text())
+  }
+
+  parseDateTime(dateTime: string) {
+    const date = utcParse("%Y%m%dT%H:%M:%SZ")(dateTime);
+    if (date === null) {
+      throw new RangeError(
+        `unable to parse XAPI datetime ${JSON.stringify(dateTime)}`
+      );
+    }
+    return date.getTime();
   }
 
   async loadRecords<T extends XenApiRecord>(

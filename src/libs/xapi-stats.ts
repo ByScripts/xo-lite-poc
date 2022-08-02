@@ -1,0 +1,439 @@
+import defaults from 'lodash/defaults.js'
+import findKey from 'lodash/findKey.js'
+import forEach from 'lodash/forEach.js'
+import identity from 'lodash/identity.js'
+import map from 'lodash/map.js'
+import { BaseError } from 'make-error'
+import type XenApi from '@/libs/xen-api'
+import { useHostStore } from '@/stores/host.store'
+import type { XenApiHost } from '@/libs/xen-api'
+import { limitConcurrency } from 'limit-concurrency-decorator'
+import { synchronized } from 'decorator-synchronized'
+import { useVmStore } from '@/stores/vm.store'
+
+class FaultyGranularity extends BaseError {}
+
+// -------------------------------------------------------------------
+
+// according to https://xapi-project.github.io/xen-api/metrics.html
+// The values are stored at intervals of:
+//  - 5 seconds for the past 10 minutes
+//  - one minute for the past 2 hours
+//  - one hour for the past week
+//  - one day for the past year
+const RRD_STEP_SECONDS = 5
+const RRD_STEP_MINUTES = 60
+const RRD_STEP_HOURS = 3600
+const RRD_STEP_DAYS = 86400
+
+export enum Granularity {
+  Seconds = "seconds",
+  Minutes = "minutes",
+  Hours = 'hours',
+  Days = 'days'
+}
+
+const RRD_STEP_FROM_STRING: {[key:string]: number} = {
+  seconds: RRD_STEP_SECONDS,
+  minutes: RRD_STEP_MINUTES,
+  hours: RRD_STEP_HOURS,
+  days: RRD_STEP_DAYS,
+}
+
+// points = intervalInSeconds / step
+const RRD_POINTS_PER_STEP :{[key: string]: number} ={
+  [RRD_STEP_SECONDS]: 120,
+  [RRD_STEP_MINUTES]: 120,
+  [RRD_STEP_HOURS]: 168,
+  [RRD_STEP_DAYS]: 366,
+}
+
+// -------------------------------------------------------------------
+// Utils
+// -------------------------------------------------------------------
+
+function convertNanToNull(value: number) {
+  return isNaN(value) ? null : value
+}
+
+// -------------------------------------------------------------------
+// Stats
+// -------------------------------------------------------------------
+
+const computeValues = (dataRow: any, legendIndex: any, transformValue = identity) =>
+  map(dataRow, ({ values }) => transformValue(convertNanToNull(values[legendIndex])))
+
+const createGetProperty = (obj: any, property: any, defaultValue: any) => defaults(obj, { [property]: defaultValue })[property]
+
+const testMetric = (test: any, type: any) =>
+  typeof test === 'string' ? test === type : typeof test === 'function' ? test(type) : test.exec(type)
+
+const findMetric = (metrics: any, metricType: any) => {
+  let testResult
+  let metric
+
+  forEach(metrics, (current) => {
+    if (current.test === undefined) {
+      const newValues = findMetric(current, metricType)
+
+      metric = newValues.metric
+      if (metric !== undefined) {
+        testResult = newValues.testResult
+        return false
+      }
+    } else if ((testResult = testMetric(current.test, metricType))) {
+      metric = current
+      return false
+    }
+  })
+
+  return { metric, testResult }
+}
+
+// -------------------------------------------------------------------
+
+// The metrics:
+//  test: can be a function, regexp or string, default to: currentKey
+//  getPath: default to: () => currentKey
+//  transformValue: default to: identity
+const STATS : {[key: string]: object} =  {
+  host: {
+    load: {
+      test: 'loadavg',
+    },
+    memoryFree: {
+      test: 'memory_free_kib',
+      transformValue: (value: any) => value * 1024,
+    },
+    memory: {
+      test: 'memory_total_kib',
+      transformValue: (value: any)=> value * 1024,
+    },
+    cpus: {
+      test: /^cpu(\d+)$/,
+      getPath: (matches: any) => ['cpus', matches[1]],
+      transformValue: (value: any) => value * 1e2,
+    },
+    pifs: {
+      rx: {
+        test: /^pif_eth(\d+)_rx$/,
+        getPath:  (matches: any) => ['pifs', 'rx', matches[1]],
+      },
+      tx: {
+        test: /^pif_eth(\d+)_tx$/,
+        getPath:  (matches: any) => ['pifs', 'tx', matches[1]],
+      },
+    },
+    iops: {
+      r: {
+        test: /^iops_read_(\w+)$/,
+        getPath:  (matches: any) => ['iops', 'r', matches[1]],
+      },
+      w: {
+        test: /^iops_write_(\w+)$/,
+        getPath:  (matches: any) => ['iops', 'w', matches[1]],
+      },
+    },
+    ioThroughput: {
+      r: {
+        test: /^io_throughput_read_(\w+)$/,
+        getPath:  (matches: any) => ['ioThroughput', 'r', matches[1]],
+        transformValue: (value: any) => value * 2 ** 20,
+      },
+      w: {
+        test: /^io_throughput_write_(\w+)$/,
+        getPath: (matches: any)  => ['ioThroughput', 'w', matches[1]],
+        transformValue: (value: any) => value * 2 ** 20,
+      },
+    },
+    latency: {
+      r: {
+        test: /^read_latency_(\w+)$/,
+        getPath: (matches: any)  => ['latency', 'r', matches[1]],
+        transformValue: (value: any) => value / 1e3,
+      },
+      w: {
+        test: /^write_latency_(\w+)$/,
+        getPath: (matches: any)  => ['latency', 'w', matches[1]],
+        transformValue: (value: any) => value / 1e3,
+      },
+    },
+    iowait: {
+      test: /^iowait_(\w+)$/,
+      getPath: (matches: any)  => ['iowait', matches[1]],
+    },
+  },vm: {
+    memoryFree: {
+      test: 'memory_internal_free',
+      transformValue: (value: any) => value * 1024,
+    },
+    memory: {
+      test: (metricType: any) => metricType.endsWith('memory'),
+    },
+    cpus: {
+      test: /^cpu(\d+)$/,
+      getPath:  (matches: any) => ['cpus', matches[1]],
+      transformValue: (value: any) => value * 1e2,
+    },
+    vifs: {
+      rx: {
+        test: /^vif_(\d+)_rx$/,
+        getPath: (matches: any) => ['vifs', 'rx', matches[1]],
+      },
+      tx: {
+        test: /^vif_(\d+)_tx$/,
+        getPath:  (matches: any) => ['vifs', 'tx', matches[1]],
+      },
+    },
+    xvds: {
+      r: {
+        test: /^vbd_xvd(.)_read$/,
+        getPath:  (matches: any) => ['xvds', 'r', matches[1]],
+      },
+      w: {
+        test: /^vbd_xvd(.)_write$/,
+        getPath:  (matches: any) => ['xvds', 'w', matches[1]],
+      },
+    },
+    iops: {
+      r: {
+        test: /^vbd_xvd(.)_iops_read$/,
+        getPath:  (matches: any) => ['iops', 'r', matches[1]],
+      },
+      w: {
+        test: /^vbd_xvd(.)_iops_write$/,
+        getPath:  (matches: any) => ['iops', 'w', matches[1]],
+      },
+    },
+  },
+}
+
+// -------------------------------------------------------------------
+
+// RRD
+// json: {
+//   meta: {
+//     start: Number,
+//     step: Number,
+//     end: Number,
+//     rows: Number,
+//     columns: Number,
+//     legend: String[rows]
+//   },
+//   data: Item[columns] // Item = { t: Number, values: Number[rows] }
+// }
+
+// Local cache
+// _statsByObject : {
+//   [uuid]: {
+//     [step]: {
+//       endTimestamp: Number, // the timestamp of the last statistic point
+//       interval: Number, // step
+//       stats: T
+//     }
+//   }
+// }
+
+export type VmStats = {
+  cpus: Record<string, number[]>,
+  iops: {
+    r: Record<string, number[]>,
+    w: Record<string, number[]>
+  },
+  memory: number[],
+  memoryFree: number[],
+  vifs: {
+    rx:  Record<string, number[]>,
+    tx:  Record<string, number[]>,
+  },
+  xvds: {
+    w:Record<string, number[]>,
+    r:Record<string, number[]>,
+  }
+}
+
+export type HostStats = {
+  cpus: Record<string, number[]>,
+  ioThroughput: {
+    r: Record<string, number[]>,
+    w: Record<string, number[]>
+  },
+  iops: {
+    r: Record<string, number[]>,
+    w: Record<string, number[]>
+  },
+  iowait: Record<string, number[]>,
+  latency: {
+    r: Record<string, number[]>,
+    w: Record<string, number[]>
+  },
+  load: number[],
+  memory: number[],
+  memoryFree: number[],
+  pifs: {
+    rx:  Record<string, number[]>,
+    tx:  Record<string, number[]>,
+  }
+}
+
+export type XapiStatsResponse<T> = {
+  endTimestamp: number,
+  interval: number,
+  stats: T
+}
+
+export default class XapiStats {
+  #xapi
+  #statsByObject:  {
+    [uuid: string]: {
+      [step: string]: XapiStatsResponse<HostStats | any>
+    }
+  } = {}
+  constructor(xapi: XenApi) {
+    this.#xapi = xapi
+  }
+
+  // Execute one http request on a XenServer for get stats
+  // Return stats (Json format) or throws got exception
+  @limitConcurrency(3)
+  _getJson(host: XenApiHost, timestamp: any, step: any) {
+    return this.#xapi
+    // @ts-expect-error getResource wrapped by @cancelable. wait 3 argument ($cancelToken)
+      .getResource('/rrd_updates', {
+        host,
+        query: {
+          cf: 'AVERAGE',
+          host: 'true',
+          interval: step,
+          json: 'true',
+          start: timestamp,
+        },
+      })
+  }
+
+  // To avoid multiple requests, we keep a cash for the stats and
+  // only return it if we not exceed a step
+  #getCachedStats(uuid: any, step: any, currentTimeStamp: any) {
+    const statsByObject = this.#statsByObject
+
+    const stats = statsByObject[uuid]?.[step]
+    if (stats === undefined) {
+      return
+    }
+
+    if (stats.endTimestamp + step < currentTimeStamp) {
+      delete statsByObject[uuid][step]
+      return
+    }
+
+    return stats
+  }
+
+  @synchronized.withKey(( { host }: {host: XenApiHost}) => host.uuid)
+  async _getAndUpdateStats({ host, uuid, granularity } : {host: XenApiHost, uuid: any, granularity: Granularity}) {
+    const step = granularity === undefined ? RRD_STEP_SECONDS : RRD_STEP_FROM_STRING[granularity]
+    if(step === undefined){
+        throw new FaultyGranularity(
+            `Unknown granularity: '${granularity}'. Use 'seconds', 'minutes', 'hours', or 'days'.`
+        )
+    }
+    const currentTimeStamp = await this.#xapi.getHostServertime(host)
+    
+    const stats = this.#getCachedStats(uuid, step, currentTimeStamp)
+    if (stats !== undefined) {
+        return stats
+    }
+    
+    const maxDuration = step * RRD_POINTS_PER_STEP[step]
+    
+    // To avoid crossing over the boundary, we ask for one less step
+    const optimumTimestamp = currentTimeStamp - maxDuration + step
+    const json = await this._getJson(host, optimumTimestamp, step)
+    
+    if(uuid === "1d381a66-d1cb-bb7e-50a1-feeab58b293d") console.log("VM")
+    console.log(json)
+    const actualStep = json.meta.step
+  
+    if (json.data.length > 0) {
+      // fetched data is organized from the newest to the oldest
+      // but this implementation requires it in the other direction
+      json.data.reverse()
+      json.meta.legend.forEach((legend: any, index: number) => {
+        const [, type, uuid, metricType] = /^AVERAGE:([^:]+):(.+):(.+)$/.exec(legend) as any
+
+        const metrics = STATS[type] as any
+        if (metrics === undefined) {
+          return
+        }
+
+        const { metric, testResult } = findMetric(metrics, metricType) as any
+        if (metric === undefined) {
+          return
+        }
+
+        const xoObjectStats = createGetProperty(this.#statsByObject, uuid, {})
+        let stepStats = xoObjectStats[actualStep]
+        if (stepStats === undefined || stepStats.endTimestamp !== json.meta.end) {
+          stepStats = xoObjectStats[actualStep] = {
+            endTimestamp: json.meta.end,
+            interval: actualStep,
+          }
+        }
+
+        const path = metric.getPath !== undefined ? metric.getPath(testResult) : [findKey(metrics, metric)]
+
+        const lastKey = path.length - 1
+        let metricStats = createGetProperty(stepStats, 'stats', {})
+        path.forEach((property: any, key: number) => {
+          if (key === lastKey) {
+            metricStats[property] = computeValues(json.data, index, metric.transformValue)
+            return
+          }
+
+          metricStats = createGetProperty(metricStats, property, {})
+        })
+      })
+    }
+
+    if (actualStep !== step) {
+      throw new FaultyGranularity(`Unable to get the true granularity: ${actualStep}`)
+    }
+
+    return (
+      this.#statsByObject[uuid]?.[step] ?? {
+        endTimestamp: currentTimeStamp,
+        interval: step,
+        stats: {},
+      }
+    )
+  }
+
+  getHostStats = (hostId: string, granularity: Granularity): Promise<XapiStatsResponse<HostStats>> => {
+    const host = useHostStore().getRecordByUuid(hostId)
+    if (host === undefined) {
+      throw new Error(`Host ${hostId} could not be found.`)
+    }
+    return this._getAndUpdateStats({
+        host,
+        uuid: host.uuid,
+        granularity
+    })
+  }
+
+  getVmStats = (vmId: string, granularity: Granularity): Promise<XapiStatsResponse<VmStats>> => {
+    const vm = useVmStore().getRecordByUuid(vmId)
+    if (vm === undefined) {
+      throw new Error(`VM ${vmId} could not be found.`)
+    }
+    const host = useHostStore().getRecord(vm.resident_on)
+    if (host === undefined) {
+      throw new Error(`VM ${vmId} is halted or host could not be found.`)
+    }
+
+    return this._getAndUpdateStats({
+      host,
+      uuid: vm.uuid,
+      granularity,
+    })
+  }
+}

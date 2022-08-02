@@ -349,8 +349,6 @@ export default class XapiStats {
     const optimumTimestamp = currentTimeStamp - maxDuration + step
     const json = await this._getJson(host, optimumTimestamp, step)
     
-    if(uuid === "1d381a66-d1cb-bb7e-50a1-feeab58b293d") console.log("VM")
-    console.log(json)
     const actualStep = json.meta.step
   
     if (json.data.length > 0) {

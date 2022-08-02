@@ -18,3 +18,7 @@ export function sortRecordsByNameLabel(
 export function escapeRegExp(string: string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
+
+export async function delay(ms: number) {
+  return await new Promise((resolve) => setTimeout(resolve, ms));
+}

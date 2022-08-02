@@ -1,7 +1,6 @@
 import { utcParse } from "d3-time-format";
+import JSON5 from "json5";
 import { JSONRPCClient } from "json-rpc-2.0";
-import {cancelable, ignoreErrors, pRetry} from 'promise-toolbox'
-import JSON5 from 'json5'
 
 export type RawObjectType =
   | "Bond"
@@ -203,16 +202,21 @@ export default class XenApi {
     return Math.floor(this.parseDateTime(serverLocaltime) / 1e3);
   }
 
-  @cancelable
-  async getResource($cancelToken: object, pathname: string, {host, query}: {host: XenApiHost, query: any}) {
-    const url = new URL('http://localhost')
-    url.protocol = window.location.protocol
-    url.hostname = host.address
-    url.pathname = pathname
-    url.search = new URLSearchParams({...query, session_id: this.#sessionId }).toString()
+  async getResource(
+    pathname: string,
+    { host, query }: { host: XenApiHost; query: any }
+  ) {
+    const url = new URL("http://localhost");
+    url.protocol = window.location.protocol;
+    url.hostname = host.address;
+    url.pathname = pathname;
+    url.search = new URLSearchParams({
+      ...query,
+      session_id: this.#sessionId,
+    }).toString();
 
-    const response = await fetch(url)
-    return JSON5.parse(await response.text())
+    const response = await fetch(url);
+    return JSON5.parse(await response.text());
   }
 
   parseDateTime(dateTime: string) {

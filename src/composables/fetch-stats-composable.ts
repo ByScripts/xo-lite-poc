@@ -1,4 +1,5 @@
 import { type Ref, onMounted, onUnmounted, ref } from "vue";
+import { delay } from "@/libs/utils";
 import type { Granularity, XapiStatsResponse } from "@/libs/xapi-stats";
 import { useXenApiStore } from "@/stores/xen-api.store";
 
@@ -32,8 +33,4 @@ export default function useFetchStats<T>(
   };
 
   return { stats } as { stats: Ref<XapiStatsResponse<T>> };
-}
-
-async function delay(ms: number) {
-  return await new Promise((resolve) => setTimeout(resolve, ms));
 }

@@ -298,7 +298,6 @@ export default class XapiStats {
   @limitConcurrency(3)
   _getJson(host: XenApiHost, timestamp: any, step: any) {
     return this.#xapi
-    // @ts-expect-error getResource wrapped by @cancelable. wait 3 argument ($cancelToken)
       .getResource('/rrd_updates', {
         host,
         query: {

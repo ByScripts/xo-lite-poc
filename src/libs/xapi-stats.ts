@@ -7,6 +7,7 @@ import { limitConcurrency } from 'limit-concurrency-decorator'
 import { synchronized } from 'decorator-synchronized'
 import { useVmStore } from '@/stores/vm.store'
 import JSON5 from "json5";
+import type { Dictionary } from 'lodash'
 
 class FaultyGranularity extends BaseError {}
 
@@ -59,15 +60,15 @@ function convertNanToNull(value: number) {
 // Stats
 // -------------------------------------------------------------------
 
-const computeValues = (dataRow: any, legendIndex: any, transformValue = identity) =>
+const computeValues = (dataRow: any, legendIndex: number, transformValue = identity) =>
   map(dataRow, ({ values }) => transformValue(convertNanToNull(values[legendIndex])))
 
-const createGetProperty = (obj: any, property: any, defaultValue: any) => defaults(obj, { [property]: defaultValue })[property]
+const createGetProperty = (obj: object, property: string, defaultValue: unknown) => defaults(obj, { [property]: defaultValue })[property] as any
 
-const testMetric = (test: any, type: any) =>
+const testMetric = (test: string | {exec: (type: string) => boolean} | {(type: string): boolean}, type: string): boolean =>
   typeof test === 'string' ? test === type : typeof test === 'function' ? test(type) : test.exec(type)
 
-const findMetric = (metrics: any, metricType: any) => {
+const findMetric = (metrics: any, metricType: string) => {
   let testResult
   let metric
 
@@ -102,106 +103,106 @@ const STATS : {[key: string]: object} =  {
     },
     memoryFree: {
       test: 'memory_free_kib',
-      transformValue: (value: any) => value * 1024,
+      transformValue: (value: number) => value * 1024,
     },
     memory: {
       test: 'memory_total_kib',
-      transformValue: (value: any)=> value * 1024,
+      transformValue: (value: number)=> value * 1024,
     },
     cpus: {
       test: /^cpu(\d+)$/,
       getPath: (matches: any) => ['cpus', matches[1]],
-      transformValue: (value: any) => value * 1e2,
+      transformValue: (value: number) => value * 1e2,
     },
     pifs: {
       rx: {
         test: /^pif_eth(\d+)_rx$/,
-        getPath:  (matches: any) => ['pifs', 'rx', matches[1]],
+        getPath:  (matches: unknown[]) => ['pifs', 'rx', matches[1]],
       },
       tx: {
         test: /^pif_eth(\d+)_tx$/,
-        getPath:  (matches: any) => ['pifs', 'tx', matches[1]],
+        getPath:  (matches: unknown[]) => ['pifs', 'tx', matches[1]],
       },
     },
     iops: {
       r: {
         test: /^iops_read_(\w+)$/,
-        getPath:  (matches: any) => ['iops', 'r', matches[1]],
+        getPath:  (matches: unknown[]) => ['iops', 'r', matches[1]],
       },
       w: {
         test: /^iops_write_(\w+)$/,
-        getPath:  (matches: any) => ['iops', 'w', matches[1]],
+        getPath:  (matches: unknown[]) => ['iops', 'w', matches[1]],
       },
     },
     ioThroughput: {
       r: {
         test: /^io_throughput_read_(\w+)$/,
-        getPath:  (matches: any) => ['ioThroughput', 'r', matches[1]],
-        transformValue: (value: any) => value * 2 ** 20,
+        getPath:  (matches: unknown[]) => ['ioThroughput', 'r', matches[1]],
+        transformValue: (value: number) => value * 2 ** 20,
       },
       w: {
         test: /^io_throughput_write_(\w+)$/,
-        getPath: (matches: any)  => ['ioThroughput', 'w', matches[1]],
-        transformValue: (value: any) => value * 2 ** 20,
+        getPath: (matches: unknown[])  => ['ioThroughput', 'w', matches[1]],
+        transformValue: (value: number) => value * 2 ** 20,
       },
     },
     latency: {
       r: {
         test: /^read_latency_(\w+)$/,
-        getPath: (matches: any)  => ['latency', 'r', matches[1]],
-        transformValue: (value: any) => value / 1e3,
+        getPath: (matches: unknown[])  => ['latency', 'r', matches[1]],
+        transformValue: (value: number) => value / 1e3,
       },
       w: {
         test: /^write_latency_(\w+)$/,
-        getPath: (matches: any)  => ['latency', 'w', matches[1]],
-        transformValue: (value: any) => value / 1e3,
+        getPath: (matches: unknown[])  => ['latency', 'w', matches[1]],
+        transformValue: (value: number) => value / 1e3,
       },
     },
     iowait: {
       test: /^iowait_(\w+)$/,
-      getPath: (matches: any)  => ['iowait', matches[1]],
+      getPath: (matches: unknown[])  => ['iowait', matches[1]],
     },
   },vm: {
     memoryFree: {
       test: 'memory_internal_free',
-      transformValue: (value: any) => value * 1024,
+      transformValue: (value: number) => value * 1024,
     },
     memory: {
-      test: (metricType: any) => metricType.endsWith('memory'),
+      test: (metricType: string) => metricType.endsWith('memory'),
     },
     cpus: {
       test: /^cpu(\d+)$/,
-      getPath:  (matches: any) => ['cpus', matches[1]],
-      transformValue: (value: any) => value * 1e2,
+      getPath:  (matches: unknown[]) => ['cpus', matches[1]],
+      transformValue: (value: number) => value * 1e2,
     },
     vifs: {
       rx: {
         test: /^vif_(\d+)_rx$/,
-        getPath: (matches: any) => ['vifs', 'rx', matches[1]],
+        getPath: (matches: unknown[]) => ['vifs', 'rx', matches[1]],
       },
       tx: {
         test: /^vif_(\d+)_tx$/,
-        getPath:  (matches: any) => ['vifs', 'tx', matches[1]],
+        getPath:  (matches: unknown[]) => ['vifs', 'tx', matches[1]],
       },
     },
     xvds: {
       r: {
         test: /^vbd_xvd(.)_read$/,
-        getPath:  (matches: any) => ['xvds', 'r', matches[1]],
+        getPath:  (matches: unknown[]) => ['xvds', 'r', matches[1]],
       },
       w: {
         test: /^vbd_xvd(.)_write$/,
-        getPath:  (matches: any) => ['xvds', 'w', matches[1]],
+        getPath:  (matches: unknown[]) => ['xvds', 'w', matches[1]],
       },
     },
     iops: {
       r: {
         test: /^vbd_xvd(.)_iops_read$/,
-        getPath:  (matches: any) => ['iops', 'r', matches[1]],
+        getPath:  (matches: unknown[]) => ['iops', 'r', matches[1]],
       },
       w: {
         test: /^vbd_xvd(.)_iops_write$/,
-        getPath:  (matches: any) => ['iops', 'w', matches[1]],
+        getPath:  (matches: unknown[]) => ['iops', 'w', matches[1]],
       },
     },
   },
@@ -348,7 +349,7 @@ export default class XapiStats {
     const optimumTimestamp = currentTimeStamp - maxDuration + step
     const json = await this._getJson(host, optimumTimestamp, step)
     
-    const actualStep = json.meta.step
+    const actualStep = json.meta.step as number
   
     if (json.data.length > 0) {
       // fetched data is organized from the newest to the oldest

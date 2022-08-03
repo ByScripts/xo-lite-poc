@@ -1,8 +1,4 @@
-import defaults from 'lodash/defaults.js'
-import findKey from 'lodash/findKey.js'
-import forEach from 'lodash/forEach.js'
-import identity from 'lodash/identity.js'
-import map from 'lodash/map.js'
+import { defaults, findKey, forEach, identity, map } from 'lodash-es'
 import { BaseError } from 'make-error'
 import type XenApi from '@/libs/xen-api'
 import { useHostStore } from '@/stores/host.store'
@@ -10,6 +6,7 @@ import type { XenApiHost } from '@/libs/xen-api'
 import { limitConcurrency } from 'limit-concurrency-decorator'
 import { synchronized } from 'decorator-synchronized'
 import { useVmStore } from '@/stores/vm.store'
+import JSON5 from "json5";
 
 class FaultyGranularity extends BaseError {}
 
@@ -21,31 +18,33 @@ class FaultyGranularity extends BaseError {}
 //  - one minute for the past 2 hours
 //  - one hour for the past week
 //  - one day for the past year
-const RRD_STEP_SECONDS = 5
-const RRD_STEP_MINUTES = 60
-const RRD_STEP_HOURS = 3600
-const RRD_STEP_DAYS = 86400
+enum RRD_STEP {
+  Seconds = 5,
+  Minutes = 60,
+  Hours = 3600,
+  Days = 86400
+}
 
-export enum Granularity {
+export enum GRANULARITY {
   Seconds = "seconds",
   Minutes = "minutes",
   Hours = 'hours',
   Days = 'days'
 }
 
-const RRD_STEP_FROM_STRING: {[key:string]: number} = {
-  seconds: RRD_STEP_SECONDS,
-  minutes: RRD_STEP_MINUTES,
-  hours: RRD_STEP_HOURS,
-  days: RRD_STEP_DAYS,
+const RRD_STEP_FROM_STRING: {[key in GRANULARITY]: RRD_STEP} = {
+  [GRANULARITY.Seconds]: RRD_STEP.Seconds,
+  [GRANULARITY.Minutes]: RRD_STEP.Minutes,
+  [GRANULARITY.Hours]: RRD_STEP.Hours,
+  [GRANULARITY.Days]: RRD_STEP.Days,
 }
 
 // points = intervalInSeconds / step
-const RRD_POINTS_PER_STEP :{[key: string]: number} ={
-  [RRD_STEP_SECONDS]: 120,
-  [RRD_STEP_MINUTES]: 120,
-  [RRD_STEP_HOURS]: 168,
-  [RRD_STEP_DAYS]: 366,
+const RRD_POINTS_PER_STEP :{[key in RRD_STEP]: number} = {
+  [RRD_STEP.Seconds]: 120,
+  [RRD_STEP.Minutes]: 120,
+  [RRD_STEP.Hours]: 168,
+  [RRD_STEP.Days]: 366,
 }
 
 // -------------------------------------------------------------------
@@ -296,21 +295,21 @@ export default class XapiStats {
   // Execute one http request on a XenServer for get stats
   // Return stats (Json format) or throws got exception
   @limitConcurrency(3)
-  _getJson(host: XenApiHost, timestamp: any, step: any) {
-    return this.#xapi
-      .getResource('/rrd_updates', {
-        host,
-        query: {
-          cf: 'AVERAGE',
-          host: 'true',
-          interval: step,
-          json: 'true',
-          start: timestamp,
-        },
-      })
+  async _getJson(host: XenApiHost, timestamp: any, step: any) {
+    const resp = await this.#xapi.getResource('/rrd_updates', {
+      host,
+      query: {
+        cf: 'AVERAGE',
+        host: 'true',
+        interval: step,
+        json: 'true',
+        start: timestamp,
+      },
+    })
+    return JSON5.parse(await resp.text())
   }
 
-  // To avoid multiple requests, we keep a cash for the stats and
+  // To avoid multiple requests, we keep a cache for the stats and
   // only return it if we not exceed a step
   #getCachedStats(uuid: any, step: any, currentTimeStamp: any) {
     const statsByObject = this.#statsByObject
@@ -329,8 +328,8 @@ export default class XapiStats {
   }
 
   @synchronized.withKey(( { host }: {host: XenApiHost}) => host.uuid)
-  async _getAndUpdateStats({ host, uuid, granularity } : {host: XenApiHost, uuid: any, granularity: Granularity}) {
-    const step = granularity === undefined ? RRD_STEP_SECONDS : RRD_STEP_FROM_STRING[granularity]
+  async _getAndUpdateStats({ host, uuid, granularity } : {host: XenApiHost, uuid: any, granularity: GRANULARITY}) {
+    const step = granularity === undefined ? RRD_STEP.Seconds : RRD_STEP_FROM_STRING[granularity]
     if(step === undefined){
         throw new FaultyGranularity(
             `Unknown granularity: '${granularity}'. Use 'seconds', 'minutes', 'hours', or 'days'.`
@@ -405,7 +404,7 @@ export default class XapiStats {
     )
   }
 
-  getHostStats = (hostId: string, granularity: Granularity): Promise<XapiStatsResponse<HostStats>> => {
+  getHostStats = (hostId: string, granularity: GRANULARITY): Promise<XapiStatsResponse<HostStats>> => {
     const host = useHostStore().getRecordByUuid(hostId)
     if (host === undefined) {
       throw new Error(`Host ${hostId} could not be found.`)
@@ -417,7 +416,7 @@ export default class XapiStats {
     })
   }
 
-  getVmStats = (vmId: string, granularity: Granularity): Promise<XapiStatsResponse<VmStats>> => {
+  getVmStats = (vmId: string, granularity: GRANULARITY): Promise<XapiStatsResponse<VmStats>> => {
     const vm = useVmStore().getRecordByUuid(vmId)
     if (vm === undefined) {
       throw new Error(`VM ${vmId} could not be found.`)

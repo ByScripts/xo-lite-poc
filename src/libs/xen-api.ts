@@ -1,6 +1,5 @@
-import { utcParse } from "d3-time-format";
-import JSON5 from "json5";
 import { JSONRPCClient } from "json-rpc-2.0";
+import { parseDateTime } from "@/libs/utils";
 
 export type RawObjectType =
   | "Bond"
@@ -199,7 +198,7 @@ export default class XenApi {
       this.sessionId,
       host.$ref,
     ])) as string;
-    return Math.floor(this.parseDateTime(serverLocaltime) / 1e3);
+    return Math.floor(parseDateTime(serverLocaltime) / 1e3);
   }
 
   async getResource(
@@ -215,18 +214,7 @@ export default class XenApi {
       session_id: this.#sessionId,
     }).toString();
 
-    const response = await fetch(url);
-    return JSON5.parse(await response.text());
-  }
-
-  parseDateTime(dateTime: string) {
-    const date = utcParse("%Y%m%dT%H:%M:%SZ")(dateTime);
-    if (date === null) {
-      throw new RangeError(
-        `unable to parse XAPI datetime ${JSON.stringify(dateTime)}`
-      );
-    }
-    return date.getTime();
+    return fetch(url);
   }
 
   async loadRecords<T extends XenApiRecord>(

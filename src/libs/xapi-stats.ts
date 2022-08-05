@@ -1,13 +1,10 @@
 import { defaults, findKey, forEach, identity, map } from 'lodash-es'
 import { BaseError } from 'make-error'
 import type XenApi from '@/libs/xen-api'
-import { useHostStore } from '@/stores/host.store'
 import type { XenApiHost } from '@/libs/xen-api'
 import { limitConcurrency } from 'limit-concurrency-decorator'
 import { synchronized } from 'decorator-synchronized'
-import { useVmStore } from '@/stores/vm.store'
 import JSON5 from "json5";
-import type { Dictionary } from 'lodash'
 
 class FaultyGranularity extends BaseError {}
 

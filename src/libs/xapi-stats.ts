@@ -404,33 +404,4 @@ export default class XapiStats {
       }
     )
   }
-
-  getHostStats = (hostId: string, granularity: GRANULARITY): Promise<XapiStatsResponse<HostStats>> => {
-    const host = useHostStore().getRecordByUuid(hostId)
-    if (host === undefined) {
-      throw new Error(`Host ${hostId} could not be found.`)
-    }
-    return this._getAndUpdateStats({
-        host,
-        uuid: host.uuid,
-        granularity
-    })
-  }
-
-  getVmStats = (vmId: string, granularity: GRANULARITY): Promise<XapiStatsResponse<VmStats>> => {
-    const vm = useVmStore().getRecordByUuid(vmId)
-    if (vm === undefined) {
-      throw new Error(`VM ${vmId} could not be found.`)
-    }
-    const host = useHostStore().getRecord(vm.resident_on)
-    if (host === undefined) {
-      throw new Error(`VM ${vmId} is halted or host could not be found.`)
-    }
-
-    return this._getAndUpdateStats({
-      host,
-      uuid: vm.uuid,
-      granularity,
-    })
-  }
 }

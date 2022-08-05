@@ -1,7 +1,13 @@
 import { type Ref, ref } from "vue";
 import { promiseTimeout, useIntervalFn } from "@vueuse/core";
 import type { GRANULARITY, XapiStatsResponse } from "@/libs/xapi-stats";
-import { useXenApiStore } from "@/stores/xen-api.store";
+import { useHostStore } from "@/stores/host.store";
+import { useVmStore } from "@/stores/vm.store";
+
+const STORES_BY_OBJECT_TYPE = {
+  host: useHostStore,
+  vm: useVmStore,
+};
 
 export default function useFetchStats<T>(
   type: "host" | "vm",
@@ -9,8 +15,7 @@ export default function useFetchStats<T>(
   granularity: GRANULARITY
 ) {
   const stats = ref();
-  const xapiStats = useXenApiStore().getXapiStats();
-  const fetch = type === "host" ? xapiStats.getHostStats : xapiStats.getVmStats;
+  const fetch = STORES_BY_OBJECT_TYPE[type]().getStats;
 
   const fetchStats = async () => {
     stats.value = await fetch(id, granularity);
